@@ -1,12 +1,8 @@
-from django.db import models
-
-# Create your models here.
-
-
-# snippets/models.py
+from django.utils import timezone
 from django.db import models
 from pygments.lexers import get_all_lexers
 from pygments.styles import get_all_styles
+from datetime import datetime
 
 # LEXERS = [item for item in get_all_lexers() if item[1]]
 # LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
@@ -23,6 +19,7 @@ class Job(models.Model):
     recruiter = models.CharField(max_length=50, default='')
     posted_date = models.DateTimeField()
     created_date = models.DateTimeField(auto_now_add=True)
+    #highlighted = models.TextField(default='')
     # language = models.CharField(choices=LANGUAGE_CHOICES, default='python', max_length=100)
     # style = models.CharField(choices=STYLE_CHOICES, default='friendly', max_length=100)
 
@@ -36,7 +33,8 @@ class Job(models.Model):
 class JobDescription(models.Model):
     jobid = models.ForeignKey(Job, related_name='jobspec', on_delete=models.CASCADE)
     description = models.TextField(blank=False)
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_date = models.DateTimeField(default=timezone.now)
+   # highlighted = models.TextField(default='')
 
     class Meta:
         ordering = ['id']
