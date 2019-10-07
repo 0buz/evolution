@@ -2,12 +2,13 @@ from bs4 import BeautifulSoup
 from lxml import html
 from csv import reader, writer, DictReader, DictWriter
 import evolution.utils as utils
-import evolution.scripts.data_collect
+
 import re
+import os
 
 
 
-rawfile = evolution.scripts.data_collect.rawfile
+rawfile = "/home/adrian/all/evolution/evolution/data/raw/jiraraw20191007mine.txt"
 
 with open(rawfile) as f:
     html = f.read()
@@ -25,9 +26,6 @@ html_ids = {
     'Recruitment Agency':'md_recruiter',
     'Posted Date':'md_posted_date'
 }
-# syntax: {_____:_____ for __ in ____}
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# ^^^^^ REMEMBER SYNTAX   ^^^^^^^^^^^^^^^^^^^^
 
 jobs=[]
 
@@ -52,6 +50,9 @@ with open(file, "w") as f:
     csv_writer.writerow(html_ids)  # write header; by default this is html_ids.keys()
     for row in rows:
         csv_writer.writerow(row)
+
+
+
 
 
 

@@ -3,7 +3,7 @@
 import os
 # os.getcwd()
 # os.chdir("~/all/evolution/evolution")
-
+from selenium.webdriver.support import expected_conditions as EC
 from datetime import date
 import re
 from selenium.common import exceptions as SE
@@ -15,7 +15,7 @@ def fileoutput(flocation, fname, ftype):
     """Returns the fullpath for the file to be saved. e.g. flocation+fname+current date+.ftype  e.g. ../foldername/filename20190830.csv"""
     curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
     basename=f"{fname}{''.join(curr_date)}.{ftype}"    #file name
-    savepath = f"/home/adrian/all/evolution/evolution/data/{flocation}"      # path based on working directory
+    savepath = f"{os.getcwd()}/evolution/data/{flocation}"      # path based on working directory
     return os.path.join(savepath, basename)
 
 
@@ -47,7 +47,7 @@ def try_click(elem,str):
 
 
 
-from selenium.webdriver.support import expected_conditions as EC
+
 
 class WaitForAttrValueChange(object):
     def __init__(self, locator, val_):
