@@ -6,6 +6,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common import exceptions as SE
 import time
+import os
 import evolution.utils as utils
 
 
@@ -32,10 +33,8 @@ checked = driver.find_element_by_id('ddcl-selInd-i14').get_property('checked')
 if not checked:
     driver.find_element_by_id('ddcl-selInd-i14').click()
 
-
-
 # Keyword
-# driver.find_element_by_id('txtKey').send_keys("jira")
+driver.find_element_by_id('txtKey').send_keys("jira")
 
 # Search
 driver.find_element_by_css_selector('.searchbcontain').click()
@@ -46,12 +45,12 @@ job_counter = driver.find_element_by_class_name('job-counter').text
 
 print(job_counter)  # to be logged
 
-file = utils.filename('raw', 'txt')
+rawfile = utils.fileoutput('raw','jiraraw', 'txt')
 count = 0
 whilecount = 0
 jids_old = []
 
-with open(file, "w") as f:
+with open(rawfile, "w") as f:
     while job_counter:
         jobs = driver.find_elements_by_class_name('jobItem')
         jids_new = [job.get_property('id') for job in jobs]
@@ -85,6 +84,8 @@ with open(file, "w") as f:
             count += 1
             #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
         jids_old = jids_new
+
+    # log confirmation on file write completion
 
 
 
@@ -124,4 +125,7 @@ with open(file, "w") as f:
 print("Whilecount is ",whilecount)
 print("Job counter: ", job_counter)
 print("You made it!")
+
+utils.remove_white_space(rawfile)
+
 #driver.close()

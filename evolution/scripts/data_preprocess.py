@@ -2,11 +2,14 @@ from bs4 import BeautifulSoup
 from lxml import html
 from csv import reader, writer, DictReader, DictWriter
 import evolution.utils as utils
+import evolution.scripts.data_collect
 import re
 
-remove_white_space("raw20191003_test.txt")
 
-with open("raw20191003_test.txt", "r") as f:
+
+rawfile = evolution.scripts.data_collect.rawfile
+
+with open(rawfile) as f:
     html = f.read()
 
 soup = BeautifulSoup(html, 'html.parser')
@@ -42,7 +45,7 @@ for item in rows:
     print("\n",item)
 
 
-file = utils.filename('preprocessed','csv')
+file = utils.fileoutput('preprocessed','preprocessed','csv')
 
 with open(file, "w") as f:
     csv_writer = writer(f)

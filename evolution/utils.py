@@ -1,18 +1,23 @@
 # import sys
 # sys.path.append('/home/adrian/all/evolution/evolution/scripts/')
-# import os
+import os
 # os.getcwd()
-# os.chdir("/home/adrian/all/evolution/evolution")
+# os.chdir("~/all/evolution/evolution")
 
 from datetime import date
 import re
 from selenium.common import exceptions as SE
 import time
 
-def filename(fname, ftype):
-    """Returns filename built as fname+current date+.ftype  e.g. rawdata20190830.csv"""
+
+
+def fileoutput(flocation, fname, ftype):
+    """Returns the fullpath for the file to be saved. e.g. flocation+fname+current date+.ftype  e.g. ../foldername/filename20190830.csv"""
     curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
-    return f"{fname}{''.join(curr_date)}.{ftype}"
+    basename=f"{fname}{''.join(curr_date)}.{ftype}"    #file name
+    savepath = f"/home/adrian/all/evolution/evolution/data/{flocation}"      # path based on working directory
+    return os.path.join(savepath, basename)
+
 
 
 def remove_white_space(file):
@@ -23,6 +28,7 @@ def remove_white_space(file):
         f.seek(0)  # place cursor at the beginning
         f.write(data)
         f.truncate()  # remove and extra text left from the pre-edited version
+        #log confirmation of completion
 
 
 def try_click(elem,str):
@@ -54,3 +60,5 @@ class WaitForAttrValueChange(object):
             return attr_value.startswith(self.val)
         except SE.StaleElementReferenceException:
             return False
+
+
