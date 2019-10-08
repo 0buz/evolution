@@ -7,20 +7,26 @@ from django.contrib.auth.models import User
 class JobSerializer(serializers.HyperlinkedModelSerializer):    #updated from serializers.ModelSerializer
    # id = serializers.IntegerField(read_only=True)
     # owner = serializers.ReadOnlyField(source='owner.username')
-    highlight = serializers.HyperlinkedIdentityField(view_name='job-detail', format='html')
+   # highlight = serializers.HyperlinkedIdentityField(view_name='job-detail', format='html')
 
     class Meta:
         model = Job
         fields = ('url', 'id', 'title', 'type', 'location','duration', 'start_date', 'rate', 'recruiter', 'posted_date',
-                  'created_date', 'highlight')   #added 'url', 'highlight' fields
+                  'created_date')   #added 'url' fields
+
+
+    def create(self, validated_data):
+         return Job.objects.create(**validated_data)
+
+
 
 
 class JobDescriptionSerializer(serializers.HyperlinkedModelSerializer):
     #id = serializers.IntegerField(read_only=True)
-    highlight = serializers.HyperlinkedIdentityField(view_name='jobdescription-detail', format='html')
+    #highlight = serializers.HyperlinkedIdentityField(view_name='jobdescription-detail', format='html')
     class Meta:
         model = JobDescription
-        fields = ('url', 'id', 'jobid', 'description', 'created_date', 'highlight')   #added 'url', 'highlight' fields
+        fields = ('url', 'id', 'jobid', 'description', 'created_date')   #added 'url' fields
 
 
 

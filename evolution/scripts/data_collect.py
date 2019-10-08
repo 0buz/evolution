@@ -34,7 +34,7 @@ if not checked:
     driver.find_element_by_id('ddcl-selInd-i14').click()
 
 # Keyword
-driver.find_element_by_id('txtKey').send_keys("jira")
+#driver.find_element_by_id('txtKey').send_keys("jira")
 
 # Search
 driver.find_element_by_css_selector('.searchbcontain').click()
@@ -45,7 +45,7 @@ job_counter = driver.find_element_by_class_name('job-counter').text
 
 print(job_counter)  # to be logged
 
-rawfile = utils.fileoutput('raw','jiraraw', 'txt')
+rawfile = utils.fileoutput('raw','raw', 'txt')
 count = 0
 whilecount = 0
 jids_old = []
