@@ -1,10 +1,10 @@
 from rest_framework import generics, renderers
-from .models import Job, JobDescription
-from .serializers import JobSerializer, JobDescriptionSerializer
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from .models import Job, JobDescription
+from .serializers import JobSerializer, JobDescriptionSerializer
 
 import csv, io
 from django.shortcuts import render, get_object_or_404, redirect
