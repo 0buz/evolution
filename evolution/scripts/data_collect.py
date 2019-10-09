@@ -72,17 +72,23 @@ with open(rawfile, "w") as f:
 
             try:
                 WebDriverWait(driver, 20).until(utils.WaitForAttrValueChange((By.ID, 'jidval'), jid))
-                #WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, 'jidval')))     #wait for this element to load
                 loadedID = driver.find_element_by_id('jidval').get_property('value')
-               # WebDriverWait(driver, 20).until(lambda driver: jid == loadedID)      # ensure the right job details loaded by checking the job ids
-            except SE.TimeoutException as err:
-                   print(f"\nTimeout on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
-                   print(err)
+
+            except SE.NoSuchElementException as err:
+                print(f"\nNoSuchElementException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
+                print(err)
+                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
+                utils.try_click(job, "job")
+                ActionChains(driver).send_keys_to_element(job, Keys.ARROW_UP)
+                time.sleep(0.5)
+                ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
+                WebDriverWait(driver, 20).until(utils.WaitForAttrValueChange((By.ID, 'jidval'), jid))
 
             innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')
             f.write("Added job " + str(count) + innerHTML)
             count += 1
             #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
+            # WebDriverWait(driver, 20).until(lambda driver: jid == loadedID)      # ensure the right job details loaded by checking the job ids
         jids_old = jids_new
 
     # log confirmation on file write completion

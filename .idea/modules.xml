@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$USER_HOME$/Python/ModernPython3Bootcamp/Various/.idea/Various.iml" filepath="$USER_HOME$/Python/ModernPython3Bootcamp/Various/.idea/Various.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/evolution.iml" filepath="$PROJECT_DIR$/.idea/evolution.iml" />
     </modules>
   </component>
