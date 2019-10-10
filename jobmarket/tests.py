@@ -1,7 +1,7 @@
 from django.test import TestCase
 import os
-import json
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from rest_framework.test import RequestsClient
 from rest_framework.test import APIRequestFactory
 

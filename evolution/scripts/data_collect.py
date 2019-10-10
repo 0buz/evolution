@@ -1,3 +1,6 @@
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.common.by import By
@@ -6,7 +9,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common import exceptions as SE
 import time
-import os
 import evolution.utils as utils
 
 
@@ -74,14 +76,15 @@ with open(rawfile, "w") as f:
                 WebDriverWait(driver, 20).until(utils.WaitForAttrValueChange((By.ID, 'jidval'), jid))
                 loadedID = driver.find_element_by_id('jidval').get_property('value')
 
-            except SE.NoSuchElementException as err:
-                print(f"\nNoSuchElementException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
+            except SE.TimeoutException as err:
+                print(f"\nTimeoutException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
                 print(err)
                 WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
-                utils.try_click(job, "job")
-                ActionChains(driver).send_keys_to_element(job, Keys.ARROW_UP)
+                driver.find_element_by_id(loadedID).click()
+                #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_UP)
                 time.sleep(0.5)
-                ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
+                utils.try_click(job, "job")
+                #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
                 WebDriverWait(driver, 20).until(utils.WaitForAttrValueChange((By.ID, 'jidval'), jid))
 
             innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')

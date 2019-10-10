@@ -8,12 +8,13 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
     # id = serializers.IntegerField(read_only=True)
     # owner = serializers.ReadOnlyField(source='owner.username')
     # highlight = serializers.HyperlinkedIdentityField(view_name='job-detail', format='html')
+    jobs_description = serializers.PrimaryKeyRelatedField(source="desc2job", many=False, read_only=True)
 
     class Meta:
         model = Job
         fields = (
         'url', 'id', 'title', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter', 'posted_date',
-        'created_date')  # added 'url' fields
+        'created_date','jobs_description')  # added 'url' fields
 
     def create(self, validated_data):
         return Job.objects.create(**validated_data)
