@@ -25,7 +25,9 @@ SECRET_KEY = '&a^yrbza4&j@wm+v^mfx*f6ynwq$_8!#y@z*o58#8u*$bt*1+s'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1',
+                 'testserver'
+                 ]
 
 
 # Application definition
@@ -58,7 +60,7 @@ ROOT_URLCONF = 'evolution.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['/home/adrian/all/evolution'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,7 +75,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'evolution.wsgi.application'
 
-
+# REST_FRAMEWORK = {
+#     'DEFAULT_RENDERER_CLASSES': [
+#         'rest_framework.renderers.JSONRenderer',
+#     ],
+#     'DEFAULT_PARSER_CLASSES': [
+#         'rest_framework.parsers.JSONParser',
+#     ],
+#     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+# }
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 

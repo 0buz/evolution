@@ -21,7 +21,7 @@ def api_root(request, format=None):  # API root endpoint
     })
 
 
-class JobList(generics.ListAPIView):
+class JobList(generics.ListCreateAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
 
@@ -31,7 +31,7 @@ class JobDetail(generics.RetrieveAPIView):
     serializer_class = JobSerializer
 
 
-class JobDescriptionList(generics.ListAPIView):
+class JobDescriptionList(generics.ListCreateAPIView):
     queryset = JobDescription.objects.all()
     serializer_class = JobDescriptionSerializer
 

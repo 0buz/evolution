@@ -17,7 +17,7 @@ class Job(models.Model):
     start_date = models.CharField(max_length=30, default='')
     rate = models.CharField(max_length=30, default='')
     recruiter = models.CharField(max_length=50, default='')
-    posted_date = models.DateTimeField(default=timezone.datetime(2019,10,1,0,0))
+    posted_date = models.DateTimeField(default=timezone.now)
     created_date = models.DateTimeField(auto_now_add=True)
     #highlighted = models.TextField(default='')
     # language = models.CharField(choices=LANGUAGE_CHOICES, default='python', max_length=100)
@@ -31,7 +31,7 @@ class Job(models.Model):
 
 
 class JobDescription(models.Model):
-    jobid = models.ForeignKey(Job, related_name='jobspec', on_delete=models.CASCADE)
+    jobid = models.ForeignKey(Job, related_name='desc2job', on_delete=models.CASCADE)
     description = models.TextField(blank=False)
     created_date = models.DateTimeField(default=timezone.now)
    # highlighted = models.TextField(default='')
