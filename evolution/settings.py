@@ -75,7 +75,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'evolution.wsgi.application'
 
-# REST_FRAMEWORK = {
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50
 #     'DEFAULT_RENDERER_CLASSES': [
 #         'rest_framework.renderers.JSONRenderer',
 #     ],
@@ -83,7 +85,7 @@ WSGI_APPLICATION = 'evolution.wsgi.application'
 #         'rest_framework.parsers.JSONParser',
 #     ],
 #     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-# }
+}
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
