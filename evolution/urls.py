@@ -18,5 +18,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api-auth/', include('rest_framework.urls')),
+    # add a login view. This string >> 'api-auth' - does not matter, can be any
     path('', include('jobmarket.urls')), # new
 ]

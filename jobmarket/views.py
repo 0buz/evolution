@@ -1,44 +1,60 @@
-from rest_framework import generics, renderers
+from rest_framework import generics, permissions
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from .models import Job, JobDescription
-from .serializers import JobSerializer, JobDescriptionSerializer
+from .models import Job
+from .serializers import JobSerializer, UserSerializer
 
 import csv, io
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import permission_required
-
+from .models import Job
+from .serializers import JobSerializer, UserSerializer
+from .permissions import IsOwnerOrReadOnly
 
 @api_view(['GET'])
 def api_root(request, format=None):  # API root endpoint
     return Response({
+        'Users': reverse('user-list', request=request, format=format),
         'Jobs': reverse('job-list', request=request, format=format),
-        'Job Descriptions': reverse('jobdescription-list', request=request, format=format)
     })
 
 
 class JobList(generics.ListCreateAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+
+    def perform_create(self, serializer): # new
+        serializer.save(owner=self.request.user)
 
 
-class JobDetail(generics.RetrieveAPIView):
+class JobDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
 
-class JobDescriptionList(generics.ListCreateAPIView):
-    queryset = JobDescription.objects.all()
-    serializer_class = JobDescriptionSerializer
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
-class JobDescriptionDetail(generics.RetrieveAPIView):
-    queryset = JobDescription.objects.all()
-    serializer_class = JobDescriptionSerializer
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+# class JobDescriptionList(generics.ListCreateAPIView):
+#     queryset = JobDescription.objects.all()
+#     serializer_class = JobDescriptionSerializer
+#
+#
+# class JobDescriptionDetail(generics.RetrieveAPIView):
+#     queryset = JobDescription.objects.all()
+#     serializer_class = JobDescriptionSerializer
 
 
 # class JobHighlight(generics.GenericAPIView):
