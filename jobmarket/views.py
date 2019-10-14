@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from rest_framework import generics, permissions
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
@@ -13,19 +17,18 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import permission_required
-from .models import Job
-from .serializers import JobSerializer, UserSerializer, CSVUploadSerializer
-from .permissions import IsOwnerOrReadOnly
+from jobmarket.models import Job, File
+from jobmarket.serializers import JobSerializer, UserSerializer, CSVUploadSerializer
+from jobmarket.permissions import IsOwnerOrReadOnly
 
 
-class CSVUpload(APIView):
+class CSVUpload(generics.ListCreateAPIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'csvupload.html'
-    #permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
-    permission_classes = (permissions.AllowAny)
+    #permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
-
-    parser_classes = (MultiPartParser, FormParser,)
+    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, format=None):
         my_file = request.FILES['file_field_name']
@@ -37,7 +40,7 @@ class CSVUpload(APIView):
         my_saved_file = open(filename)  # there you go
 
 
-#@permission_required("admin.can_add_log_entry")
+# @permission_required("admin.can_add_log_entry")
 # def job_upload(request):
 #     template = "job_upload.html"
 #     prompt = {
@@ -62,7 +65,7 @@ class HTMLJobList(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'jobslist.html'
 
-    def get(self,request):
+    def get(self, request):
         queryset = Job.objects.all()
         return Response({'jobs': queryset})
 
@@ -71,16 +74,16 @@ class HTMLJobDetail(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'jobsdetail.html'
 
-    def get(self,request, pk):
+    def get(self, request, pk):
         job = get_object_or_404(Job, pk=pk)
         serializer = JobSerializer(job, context={'request': request})
-        return Response({'serializer':serializer, 'job':job})
+        return Response({'serializer': serializer, 'job': job})
 
-    def post(self,request, pk):
+    def post(self, request, pk):
         job = get_object_or_404(Job, pk=pk)
         serializer = JobSerializer(job, data=request.data)
         if not serializer.is_valid():
-            return Response({'serializer':serializer, 'job':job})
+            return Response({'serializer': serializer, 'job': job})
         serializer.save()
         return redirect('jobslist')
 
@@ -100,7 +103,7 @@ class JobList(generics.ListCreateAPIView):
     serializer_class = JobSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
-    def perform_create(self, serializer): # new
+    def perform_create(self, serializer):  # new
         serializer.save(owner=self.request.user)
 
 
@@ -118,23 +121,3 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-# class JobDescriptionList(generics.ListCreateAPIView):
-#     queryset = JobDescription.objects.all()
-#     serializer_class = JobDescriptionSerializer
-#
-#
-# class JobDescriptionDetail(generics.RetrieveAPIView):
-#     queryset = JobDescription.objects.all()
-#     serializer_class = JobDescriptionSerializer
-
-
-# class JobHighlight(generics.GenericAPIView):
-#     queryset = Job.objects.all()
-#     renderer_classes = (renderers.StaticHTMLRenderer,)
-#     serializer_class = JobSerializer
-#
-#     def get(self,request,*args,**kwargs):
-#         job = self.get_object()
-#         return Response(job.highlighted)
-

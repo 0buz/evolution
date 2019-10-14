@@ -10,7 +10,6 @@ from selenium.common import exceptions as SE
 import time
 
 
-
 def fileoutput(flocation, fname, ftype):
     """Returns the fullpath for the file to be saved. e.g. flocation+fname+current date+.ftype  e.g. ../foldername/filename20190830.csv"""
     curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
