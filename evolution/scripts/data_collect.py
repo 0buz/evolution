@@ -85,7 +85,7 @@ with open(rawfile, "w") as f:
                 temp = driver.find_element_by_id(loadedID)
                 ActionChains(driver).move_to_element(temp).click(temp).perform()
                 time.sleep(0.5)
-                #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_UP)
+                ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
                 WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
                 ActionChains(driver).move_to_element(job).click(job).perform()
                 #time.sleep(0.5)
