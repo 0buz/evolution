@@ -17,18 +17,46 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import permission_required
-from jobmarket.models import Job, File
-from jobmarket.serializers import JobSerializer, UserSerializer, CSVUploadSerializer
+from jobmarket.models import Job
+from jobmarket.serializers import JobSerializer, UserSerializer
 from jobmarket.permissions import IsOwnerOrReadOnly
 
+from django.http import HttpResponseRedirect
+from .forms import UploadFileForm
 
-class CSVUpload(generics.ListCreateAPIView):
+
+# Imaginary function to handle an uploaded file.
+# from somewhere import handle_uploaded_file
+
+def upload_file(request):
+    template = "csvupload.html"
+    prompt = {
+        'order': 'Order should be Title, Type, Location, Duration, Start Date, Rate, Recruiter, Post Date'
+    }
+    if request.method == "GET":
+        return render(request, template, prompt)
+
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            # handle_uploaded_file(request.FILES['file'])
+            return HttpResponseRedirect('/success/url/')
+    else:
+        form = UploadFileForm()
+    return render(request, 'csvupload.html', {'form': form})
+
+
+class CSVUpload(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'csvupload.html'
-    #permission_classes = (permissions.IsAuthenticated,)
+    # permission_classes = (permissions.IsAuthenticated,)
     permission_classes = (permissions.AllowAny,)
 
     parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request):
+        queryset = Job.objects.all()
+        return Response({'jobs': queryset})
 
     def post(self, request, format=None):
         my_file = request.FILES['file_field_name']
@@ -37,7 +65,7 @@ class CSVUpload(generics.ListCreateAPIView):
             for chunk in my_file.chunks():
                 temp_file.write(chunk)
 
-        my_saved_file = open(filename)  # there you go
+   #     my_saved_file = open(filename)  # there you go
 
 
 # @permission_required("admin.can_add_log_entry")
@@ -95,6 +123,7 @@ def api_root(request, format=None):  # API root endpoint
         'Jobs': reverse('job-list', request=request, format=format),
         'HTML Jobs': reverse('jobslist', request=request, format=format),
         'Upload': reverse('csvupload', request=request, format=format),
+        'Upload Form': reverse('csvuploadform', request=request, format=format),
     })
 
 

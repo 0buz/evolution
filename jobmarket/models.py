@@ -30,10 +30,10 @@ class Job(models.Model):
     def __str__(self):
         return self.title
 
-class File(models.Model):
-    file = models.FileField(blank=False, null=False)
-    def __str__(self):
-        return self.file.name
+# class File(models.Model):
+#     file = models.FileField(blank=False, null=False)
+#     def __str__(self):
+#         return self.file.name
 
 # class JobDescription(models.Model):
 #     job = models.ForeignKey(Job, related_name='desc2job', on_delete=models.CASCADE)
