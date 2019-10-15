@@ -8,6 +8,7 @@ from datetime import date
 import re
 from selenium.common import exceptions as SE
 import time
+import csv
 
 
 def fileoutput(flocation, fname, ftype):
@@ -61,3 +62,30 @@ class WaitForAttrValueChange(object):
             return False
 
 
+# def csvrecords(file):
+#     with open(file,"r") as f:
+#         datareader = DictReader(f)
+#         for item in datareader:
+#             yield item
+
+
+def csvrecords(file):
+    datareader = csv.DictReader(file)
+    for item in datareader:
+        yield item
+
+#
+#file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv"
+# x=csvrecords(file)
+# print(next(x))
+# print(next(x))
+# print(next(x))
+# print(next(x))
+# print(next(x))
+#
+# count = 0
+# for row in csvrecords(file):
+#     print(row)
+#     count+=1
+#
+# print("Rows read:",count)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job
+from jobmarket.models import Job
 from django.contrib.auth.models import User
 
 

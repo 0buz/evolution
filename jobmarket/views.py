@@ -20,31 +20,46 @@ from django.contrib.auth.decorators import permission_required
 from jobmarket.models import Job
 from jobmarket.serializers import JobSerializer, UserSerializer
 from jobmarket.permissions import IsOwnerOrReadOnly
-
+from evolution.utils import csvrecords
 from django.http import HttpResponseRedirect
-from .forms import UploadFileForm
+from jobmarket.forms import UploadFileForm
 
 
-# Imaginary function to handle an uploaded file.
-# from somewhere import handle_uploaded_file
 
+"""
 def upload_file(request):
     template = "csvupload.html"
     prompt = {
         'order': 'Order should be Title, Type, Location, Duration, Start Date, Rate, Recruiter, Post Date'
     }
     if request.method == "GET":
-        return render(request, template, prompt)
+        return render(request, "csvupload.html", prompt) #render(request, template, prompt)
+
+    csv_file = request.FILES['csv_file']
+
+    if not csv_file.name.endswith('.csv'):
+        messages.error(request, "This is not a csv file.")
 
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            # handle_uploaded_file(request.FILES['file'])
-            return HttpResponseRedirect('/success/url/')
+        # if form.is_valid():
+        #     # handle_uploaded_file(request.FILES['file'])
+        #     return HttpResponseRedirect('/success/url/')
+
+        for chunk in csv_file.chunks():
+            data=chunk.decode('UTF-8')
+            csvdata=csv.DictReader(data)
+            for c in csvdata:
+                print(c)
+            print("\n",csvdata)
+            print(type(csvdata))
+            #Job.objects.create()
+
+
     else:
         form = UploadFileForm()
     return render(request, 'csvupload.html', {'form': form})
-
+"""
 
 class CSVUpload(APIView):
     renderer_classes = [TemplateHTMLRenderer]
@@ -59,11 +74,18 @@ class CSVUpload(APIView):
         return Response({'jobs': queryset})
 
     def post(self, request, format=None):
-        my_file = request.FILES['file_field_name']
-        filename = ''
-        with open(filename, 'wb+') as temp_file:
-            for chunk in my_file.chunks():
-                temp_file.write(chunk)
+        my_file = request.FILES['csv_file']
+        #csv_source = csvrecords(my_file.read().decode("UTF-8"))
+      #  print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(my_file))
+       # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(csv_source))
+       # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(record))
+
+        reader = csv.DictReader(my_file)
+        for record in reader:
+           # Job.objects.create(record,owner_id=2)
+            print(record)
+
+        return Response("File Uploaded")
 
    #     my_saved_file = open(filename)  # there you go
 
@@ -123,7 +145,7 @@ def api_root(request, format=None):  # API root endpoint
         'Jobs': reverse('job-list', request=request, format=format),
         'HTML Jobs': reverse('jobslist', request=request, format=format),
         'Upload': reverse('csvupload', request=request, format=format),
-        'Upload Form': reverse('csvuploadform', request=request, format=format),
+        #'Upload Form': reverse('csvuploadform', request=request, format=format),
     })
 
 
