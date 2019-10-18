@@ -24,8 +24,6 @@ from evolution.utils import csvrecords
 from django.http import HttpResponseRedirect
 from jobmarket.forms import UploadFileForm
 
-
-
 """
 def upload_file(request):
     template = "csvupload.html"
@@ -61,11 +59,12 @@ def upload_file(request):
     return render(request, 'csvupload.html', {'form': form})
 """
 
+
 class CSVUpload(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'csvupload.html'
     # permission_classes = (permissions.IsAuthenticated,)
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly,)
 
     parser_classes = (MultiPartParser, FormParser)
 
@@ -74,17 +73,22 @@ class CSVUpload(APIView):
         return Response({'jobs': queryset})
 
     def post(self, request):
-        my_file = request.FILES['csv_file']
+        # my_file = request.FILES['csv_file']
         # csv_source = csvrecords(my_file)
         # io_string = io.StringIO(csv_source)
-
-        data_set = my_file.read().decode('UTF-8')
+        my_file = open("/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv")
+       # data_set = my_file.read().decode('UTF-8')
+        data_set = my_file.read()
         io_string = io.StringIO(data_set)
-       # next(io_string)
-        count=0
+        # next(io_string)
+        count = 0
         for column in csv.DictReader(io_string):
-            print("\n",count, column)
-            count+=1
+            print(column)
+            serializer = JobSerializer(data=column['Title'])
+            if serializer.is_valid():
+                serializer.save(owner=self.request.user)
+            print("\n", count, column)
+            count += 1
         print("Count column:", count)
 
         # job = get_object_or_404(Job, pk=pk)
@@ -94,16 +98,15 @@ class CSVUpload(APIView):
         # serializer.save()
         # return redirect('jobslist')
 
+        csv_source = csvrecords(my_file)  # .read().decode("UTF-8"))
+        #  print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(my_file))
+        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(csv_source))
+        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(record))
 
-        csv_source = csvrecords(my_file) #.read().decode("UTF-8"))
-      #  print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(my_file))
-       # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(csv_source))
-       # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(record))
-
-        return Response("File Uploaded")
+        return render(request, self.template_name)
 
 
-   #     my_saved_file = open(filename)  # there you go
+#     my_saved_file = open(filename)  # there you go
 
 
 # @permission_required("admin.can_add_log_entry")
@@ -161,7 +164,7 @@ def api_root(request, format=None):  # API root endpoint
         'Jobs': reverse('job-list', request=request, format=format),
         'HTML Jobs': reverse('jobslist', request=request, format=format),
         'Upload': reverse('csvupload', request=request, format=format),
-        #'Upload Form': reverse('csvuploadform', request=request, format=format),
+        # 'Upload Form': reverse('csvuploadform', request=request, format=format),
     })
 
 
