@@ -80,7 +80,7 @@ with open(rawfile, "w") as f:
             except SE.TimeoutException as err:
                 print(f"\nTimeoutException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
                 print(err)
-                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
+                #WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
                 #driver.execute_script("arguments[0].scrollIntoView(true);", driver.find_element_by_id(loadedID))
                 temp = driver.find_element_by_id(loadedID)
                 ActionChains(driver).move_to_element(temp).click(temp).perform()

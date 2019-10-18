@@ -18,7 +18,12 @@ def fileoutput(flocation, fname, ftype):
     savepath = f"{os.getcwd()}/evolution/data/{flocation}"      # path based on working directory
     return os.path.join(savepath, basename)
 
-
+def preprocessed_fileoutput(flocation, fname, ftype):
+    """Returns the fullpath for the file to be saved. e.g. flocation+fname+.ftype  e.g. ../foldername/filename.csv"""
+    curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
+    basename=f"{fname}{''.join(curr_date)}.{ftype}"    #file name
+    savepath = f"{os.getcwd()}/evolution/data/{flocation}"      # path based on working directory
+    return os.path.join(savepath, basename)
 
 def remove_white_space(file):
     """Remove whitespace combination (\n followed by one or more \t) and replace with empty string."""
@@ -64,18 +69,17 @@ class WaitForAttrValueChange(object):
 
 # def csvrecords(file):
 #     with open(file,"r") as f:
-#         datareader = DictReader(f)
+#         datareader = csv.DictReader(f)
 #         for item in datareader:
 #             yield item
 
 
 def csvrecords(file):
-    datareader = csv.DictReader(file)
-    for item in datareader:
+    for item in csv.DictReader(file):
         yield item
 
 #
-#file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv"
+# file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv"
 # x=csvrecords(file)
 # print(next(x))
 # print(next(x))

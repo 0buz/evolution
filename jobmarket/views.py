@@ -73,19 +73,35 @@ class CSVUpload(APIView):
         queryset = Job.objects.all()
         return Response({'jobs': queryset})
 
-    def post(self, request, format=None):
+    def post(self, request):
         my_file = request.FILES['csv_file']
-        #csv_source = csvrecords(my_file.read().decode("UTF-8"))
+        # csv_source = csvrecords(my_file)
+        # io_string = io.StringIO(csv_source)
+
+        data_set = my_file.read().decode('UTF-8')
+        io_string = io.StringIO(data_set)
+       # next(io_string)
+        count=0
+        for column in csv.DictReader(io_string):
+            print("\n",count, column)
+            count+=1
+        print("Count column:", count)
+
+        # job = get_object_or_404(Job, pk=pk)
+        # serializer = JobSerializer(job, data=request.data)
+        # if not serializer.is_valid():
+        #     return Response({'serializer': serializer, 'job': job})
+        # serializer.save()
+        # return redirect('jobslist')
+
+
+        csv_source = csvrecords(my_file) #.read().decode("UTF-8"))
       #  print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(my_file))
        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(csv_source))
        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(record))
 
-        reader = csv.DictReader(my_file)
-        for record in reader:
-           # Job.objects.create(record,owner_id=2)
-            print(record)
-
         return Response("File Uploaded")
+
 
    #     my_saved_file = open(filename)  # there you go
 
