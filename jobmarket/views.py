@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from rest_framework import generics, permissions
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
@@ -13,31 +17,99 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import permission_required
-from .models import Job
-from .serializers import JobSerializer, UserSerializer, CSVUploadSerializer
-from .permissions import IsOwnerOrReadOnly
+from jobmarket.models import Job
+from jobmarket.serializers import JobSerializer, UserSerializer
+from jobmarket.permissions import IsOwnerOrReadOnly
+from evolution.utils import csvrecords
+from django.http import HttpResponseRedirect
+from jobmarket.forms import UploadFileForm
+
+"""
+def upload_file(request):
+    template = "csvupload.html"
+    prompt = {
+        'order': 'Order should be Title, Type, Location, Duration, Start Date, Rate, Recruiter, Post Date'
+    }
+    if request.method == "GET":
+        return render(request, "csvupload.html", prompt) #render(request, template, prompt)
+
+    csv_file = request.FILES['csv_file']
+
+    if not csv_file.name.endswith('.csv'):
+        messages.error(request, "This is not a csv file.")
+
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        # if form.is_valid():
+        #     # handle_uploaded_file(request.FILES['file'])
+        #     return HttpResponseRedirect('/success/url/')
+
+        for chunk in csv_file.chunks():
+            data=chunk.decode('UTF-8')
+            csvdata=csv.DictReader(data)
+            for c in csvdata:
+                print(c)
+            print("\n",csvdata)
+            print(type(csvdata))
+            #Job.objects.create()
+
+
+    else:
+        form = UploadFileForm()
+    return render(request, 'csvupload.html', {'form': form})
+"""
 
 
 class CSVUpload(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'csvupload.html'
-    #permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
-    permission_classes = (permissions.AllowAny)
+    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly,)
+
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request):
+        queryset = Job.objects.all()
+        return Response({'jobs': queryset})
+
+    def post(self, request):
+        # my_file = request.FILES['csv_file']
+        # csv_source = csvrecords(my_file)
+        # io_string = io.StringIO(csv_source)
+        my_file = open("/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv")
+       # data_set = my_file.read().decode('UTF-8')
+        data_set = my_file.read()
+        io_string = io.StringIO(data_set)
+        # next(io_string)
+        count = 0
+        for column in csv.DictReader(io_string):
+            print(column)
+            serializer = JobSerializer(data=column['Title'])
+            if serializer.is_valid():
+                serializer.save(owner=self.request.user)
+            print("\n", count, column)
+            count += 1
+        print("Count column:", count)
+
+        # job = get_object_or_404(Job, pk=pk)
+        # serializer = JobSerializer(job, data=request.data)
+        # if not serializer.is_valid():
+        #     return Response({'serializer': serializer, 'job': job})
+        # serializer.save()
+        # return redirect('jobslist')
+
+        csv_source = csvrecords(my_file)  # .read().decode("UTF-8"))
+        #  print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(my_file))
+        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(csv_source))
+        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(record))
+
+        return render(request, self.template_name)
 
 
-    parser_classes = (MultiPartParser, FormParser,)
-
-    def post(self, request, format=None):
-        my_file = request.FILES['file_field_name']
-        filename = ''
-        with open(filename, 'wb+') as temp_file:
-            for chunk in my_file.chunks():
-                temp_file.write(chunk)
-
-        my_saved_file = open(filename)  # there you go
+#     my_saved_file = open(filename)  # there you go
 
 
-#@permission_required("admin.can_add_log_entry")
+# @permission_required("admin.can_add_log_entry")
 # def job_upload(request):
 #     template = "job_upload.html"
 #     prompt = {
@@ -62,7 +134,7 @@ class HTMLJobList(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'jobslist.html'
 
-    def get(self,request):
+    def get(self, request):
         queryset = Job.objects.all()
         return Response({'jobs': queryset})
 
@@ -71,16 +143,16 @@ class HTMLJobDetail(APIView):
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'jobsdetail.html'
 
-    def get(self,request, pk):
+    def get(self, request, pk):
         job = get_object_or_404(Job, pk=pk)
         serializer = JobSerializer(job, context={'request': request})
-        return Response({'serializer':serializer, 'job':job})
+        return Response({'serializer': serializer, 'job': job})
 
-    def post(self,request, pk):
+    def post(self, request, pk):
         job = get_object_or_404(Job, pk=pk)
         serializer = JobSerializer(job, data=request.data)
         if not serializer.is_valid():
-            return Response({'serializer':serializer, 'job':job})
+            return Response({'serializer': serializer, 'job': job})
         serializer.save()
         return redirect('jobslist')
 
@@ -92,6 +164,7 @@ def api_root(request, format=None):  # API root endpoint
         'Jobs': reverse('job-list', request=request, format=format),
         'HTML Jobs': reverse('jobslist', request=request, format=format),
         'Upload': reverse('csvupload', request=request, format=format),
+        # 'Upload Form': reverse('csvuploadform', request=request, format=format),
     })
 
 
@@ -100,7 +173,7 @@ class JobList(generics.ListCreateAPIView):
     serializer_class = JobSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
-    def perform_create(self, serializer): # new
+    def perform_create(self, serializer):  # new
         serializer.save(owner=self.request.user)
 
 
@@ -118,23 +191,3 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-# class JobDescriptionList(generics.ListCreateAPIView):
-#     queryset = JobDescription.objects.all()
-#     serializer_class = JobDescriptionSerializer
-#
-#
-# class JobDescriptionDetail(generics.RetrieveAPIView):
-#     queryset = JobDescription.objects.all()
-#     serializer_class = JobDescriptionSerializer
-
-
-# class JobHighlight(generics.GenericAPIView):
-#     queryset = Job.objects.all()
-#     renderer_classes = (renderers.StaticHTMLRenderer,)
-#     serializer_class = JobSerializer
-#
-#     def get(self,request,*args,**kwargs):
-#         job = self.get_object()
-#         return Response(job.highlighted)
-

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, File
+from jobmarket.models import Job
 from django.contrib.auth.models import User
 
 
@@ -50,7 +50,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # updated from se
         fields = ('url', 'id', 'username', 'jobs')  # added 'url', 'jobs' fields
 
 
-class CSVUploadSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = File
-            fields = "__all__"
+# class CSVUploadSerializer(serializers.ModelSerializer):
+#         class Meta:
+#             model = File
+#             fields = "__all__"

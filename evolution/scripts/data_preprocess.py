@@ -8,7 +8,8 @@ import os
 
 
 
-rawfile = "/home/adrian/all/evolution/evolution/data/raw/jiraraw20191007mine.txt"
+rawfile = "/home/adrian/all/evolution/evolution/data/raw/raw20191001.txt"
+utils.remove_white_space(rawfile)
 
 with open(rawfile) as f:
     html = f.read()
@@ -31,8 +32,8 @@ jobs=[]
 
 for html_id_key, html_id_value in html_ids.items():
     items = soup.find_all(id=f"{html_id_value}")
-    # list comprehension on job columns; special handling for Duration, Start Date and Rate to remove div text; preferred Python route over html xpath to do this
-    column = [re.sub(html_id_key, '', item.get_text()) if (html_id_key == 'Duration') or (html_id_key == 'Start Date') or (html_id_key == 'Rate') else item.get_text() for item in items]
+    # list comprehension on job columns; special handling for Location, Duration, Start Date and Rate to remove div text; preferred Python route over html xpath to do this
+    column = [re.sub(html_id_key, '', item.get_text()) if (html_id_key == 'Location') or (html_id_key == 'Duration') or (html_id_key == 'Start Date') or (html_id_key == 'Rate') else item.get_text() for item in items]
 
     print(html_id_value, len(column), column) # to be logged
     jobs.append(column)   # append the separate lists to the main job list

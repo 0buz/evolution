@@ -62,11 +62,12 @@ with open(rawfile, "w") as f:
         for jid in jids_diff:
             job = driver.find_element_by_id(jid)
             WebDriverWait(driver, 20).until(EC.invisibility_of_element((By.ID, 'EmailAlertPrompt')))
-            driver.execute_script("arguments[0].scrollIntoView(true);", job)
+            #driver.execute_script("arguments[0].scrollIntoView(true);", job)
 
             try:
                 WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
-                utils.try_click(job,"job")
+                ActionChains(driver).move_to_element(job).click(job).perform()
+                #utils.try_click(job,"job")
                 time.sleep(0.5)
             except SE.TimeoutException as err:
                 print(f"Timeout on job no. {count} >>> {job.text[:30]} >>> try click action.")
@@ -79,13 +80,17 @@ with open(rawfile, "w") as f:
             except SE.TimeoutException as err:
                 print(f"\nTimeoutException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
                 print(err)
-                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
-                driver.find_element_by_id(loadedID).click()
-                #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_UP)
+                #WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
+                #driver.execute_script("arguments[0].scrollIntoView(true);", driver.find_element_by_id(loadedID))
+                temp = driver.find_element_by_id(loadedID)
+                ActionChains(driver).move_to_element(temp).click(temp).perform()
                 time.sleep(0.5)
-                utils.try_click(job, "job")
-                #ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
+                ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
+                WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
+                ActionChains(driver).move_to_element(job).click(job).perform()
+                #time.sleep(0.5)
                 WebDriverWait(driver, 20).until(utils.WaitForAttrValueChange((By.ID, 'jidval'), jid))
+
 
             innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')
             f.write("Added job " + str(count) + innerHTML)
