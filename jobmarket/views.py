@@ -23,6 +23,7 @@ from jobmarket.permissions import IsOwnerOrReadOnly
 from evolution.utils import csvrecords
 from django.http import HttpResponseRedirect
 from jobmarket.forms import UploadFileForm
+from rest_framework_csv import renderers as csvrend
 
 """
 def upload_file(request):
@@ -60,34 +61,53 @@ def upload_file(request):
 """
 
 
+
 class CSVUpload(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
+    renderer_classes = [TemplateHTMLRenderer, csvrend.CSVRenderer,]
+    #renderer_classes = [TemplateHTMLRenderer]
     template_name = 'csvupload.html'
     # permission_classes = (permissions.IsAuthenticated,)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly,)
 
     parser_classes = (MultiPartParser, FormParser)
+    #serializer_class = JobSerializer
 
     def get(self, request):
         queryset = Job.objects.all()
         return Response({'jobs': queryset})
 
+    # def get_renderer_context(self):
+    #     context = super().get_renderer_context()
+    #     context['header'] = (self.request.GET['fields'].split(",")
+    #                          if 'fields' in self.request.GET else None)
+    #     return context
+
     def post(self, request):
-        # my_file = request.FILES['csv_file']
+        my_file = request.FILES['csv_file']
         # csv_source = csvrecords(my_file)
         # io_string = io.StringIO(csv_source)
-        my_file = open("/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv")
-       # data_set = my_file.read().decode('UTF-8')
-        data_set = my_file.read()
-        io_string = io.StringIO(data_set)
+        # my_file = open("/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv")
+        # data_set = io.StringIO(my_file.read().decode('UTF-8'))
+        data_set = io.TextIOWrapper(my_file)
+        print("\nDATA SET >>>>>>>", data_set)
+        # csv_source = csvrecords(my_file)
+        # print("\nCSV SOURCE >>>>>>>",next(csv_source))
+        # data_set = my_file.read()
+        # io_string = io.StringIO(csv_source)
         # next(io_string)
         count = 0
-        for column in csv.DictReader(io_string):
-            print(column)
-            serializer = JobSerializer(data=column['Title'])
-            if serializer.is_valid():
-                serializer.save(owner=self.request.user)
-            print("\n", count, column)
+        rdr = csv.DictReader(data_set)
+        print("\nRequest DAta KKKKKKKKKKKKKKKK",request.data)
+        #rdr = csvrecords(data_set)
+       # print("XXXXXXXXXXXXXXXXXXXX", next(rdr))
+        for item in rdr:
+            print("\n", count, item)
+            serializer = JobSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            #print(serializer.data)
+            serializer.save(owner=self.request.user)
+            # #serializer.create(validated_data=item)
+            #
             count += 1
         print("Count column:", count)
 
@@ -173,7 +193,7 @@ class JobList(generics.ListCreateAPIView):
     serializer_class = JobSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
-    def perform_create(self, serializer):  # new
+    def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 

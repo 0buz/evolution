@@ -45,6 +45,9 @@ driver.find_element_by_css_selector('.searchbcontain').click()
 WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_class_name('job-counter').text.strip() != '')
 job_counter = driver.find_element_by_class_name('job-counter').text
 
+
+
+
 print(job_counter)  # to be logged
 
 rawfile = utils.fileoutput('raw','raw', 'txt')

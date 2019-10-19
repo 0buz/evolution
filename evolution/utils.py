@@ -67,26 +67,27 @@ class WaitForAttrValueChange(object):
             return False
 
 
-def csvrecords(file):
-    with open(file,"r") as f:
-        datareader = csv.DictReader(f)
-        for item in datareader:
-            yield dict(item)
-
-
 # def csvrecords(file):
-#     for item in csv.DictReader(file):
-#         yield item
+#     with open(file,"r") as f:
+#         datareader = csv.DictReader(f)
+#         for item in datareader:
+#             yield item
+#
+#
+def csvrecords(file):
+    for item in csv.DictReader(file):
+        yield item
 
 #
-file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv"
-x=csvrecords(file)
-print(next(x))
-print(next(x))
-print(next(x))
-print(next(x))
-print(dict(next(x)).values())
-
+# file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv"
+# y = open(file,"r")
+# x=csvrecords(y)
+# print(next(x))
+# print(next(x))
+# print(next(x))
+# print(next(x))
+# print(next(x)["title"])
+#
 # count = 0
 # for row in csvrecords(file):
 #     print(row)

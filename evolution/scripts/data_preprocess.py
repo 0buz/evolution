@@ -1,10 +1,12 @@
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from bs4 import BeautifulSoup
 from lxml import html
 from csv import reader, writer, DictReader, DictWriter
 import evolution.utils as utils
-
 import re
-import os
+
 
 
 
@@ -17,15 +19,15 @@ with open(rawfile) as f:
 soup = BeautifulSoup(html, 'html.parser')
 
 html_ids = {
-    'Title':'td_jobpositionlink',
-    'Description':'md_skills',
-    'Type':'td_job_type',
-    'Location':'location',
-    'Duration':'duration',
-    'Start Date':'startdate',
-    'Rate':'rate',
-    'Recruitment Agency':'md_recruiter',
-    'Posted Date':'md_posted_date'
+    'title':'td_jobpositionlink',
+    'description':'md_skills',
+    'type':'td_job_type',
+    'location':'location',
+    'duration':'duration',
+    'start_date':'startdate',
+    'rate':'rate',
+    'recruiter':'md_recruiter',
+    'posted_date':'md_posted_date'
 }
 
 jobs=[]
@@ -51,10 +53,6 @@ with open(file, "w") as f:
     csv_writer.writerow(html_ids)  # write header; by default this is html_ids.keys()
     for row in rows:
         csv_writer.writerow(row)
-
-
-
-
 
 
 

@@ -14,8 +14,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
         model = Job
         fields = (
             'url', 'id', 'title', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter', 'posted_date',
-            'description',
-            'created_date', 'owner')  # added 'url', 'owner' fields
+            'description', 'created_date', 'owner')  # added 'url', 'owner' fields
 
     def create(self, validated_data):
         return Job.objects.create(**validated_data)
