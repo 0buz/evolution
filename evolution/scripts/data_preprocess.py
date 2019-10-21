@@ -7,6 +7,7 @@ from csv import reader, writer, DictReader, DictWriter
 import csv
 import evolution.utils as utils
 import re
+import logging
 
 
 
@@ -50,11 +51,12 @@ rows = list(zip(*jobs))
 file = utils.fileoutput('preprocessed','preprocessed','csv')
 
 with open(file, "w") as f:
-    csv_writer = writer(f, quoting=csv.QUOTE_NONNUMERIC)
-    csv_writer.writerow(html_ids)  # write header; by default this is html_ids.keys()
+    header=['title','description','type','location','duration','start_date','rate','recruiter','posted_date']
+    csv_writer = writer(f)
+    csv_writer.writerow(header)
     for row in rows:
         csv_writer.writerow(row)
 
-
+logging.getLogger("info_logger").info(f"{file} create.")
 
 

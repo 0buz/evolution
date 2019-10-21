@@ -10,7 +10,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
     duration = serializers.CharField(allow_blank=True)
     start_date = serializers.CharField(allow_blank=True)
     rate = serializers.CharField(allow_blank=True)
-    posted_date = serializers.DateTimeField(input_formats=["%d/%m/%Y %H:%M:%S"])
+    posted_date = serializers.DateTimeField(input_formats=[("%d/%m/%Y %H:%M:%S")])
 
     # highlight = serializers.HyperlinkedIdentityField(view_name='job-detail', format='html')
     # jobs_description = serializers.PrimaryKeyRelatedField(source="desc2job", many=False, read_only=True)
