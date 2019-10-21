@@ -72,14 +72,14 @@ class WaitForAttrValueChange(object):
 #         datareader = csv.DictReader(f)
 #         for item in datareader:
 #             yield item
-#
-#
+
+
 def csvrecords(file):
     for item in csv.DictReader(file):
         yield item
 
 #
-# file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv"
+#file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007updated.csv"
 # y = open(file,"r")
 # x=csvrecords(y)
 # print(next(x))
@@ -90,7 +90,7 @@ def csvrecords(file):
 #
 # count = 0
 # for row in csvrecords(file):
-#     print(row)
+#     print("Row no", count, row)
 #     count+=1
-#
+
 # print("Rows read:",count)

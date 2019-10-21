@@ -24,6 +24,7 @@ from evolution.utils import csvrecords
 from django.http import HttpResponseRedirect
 from jobmarket.forms import UploadFileForm
 from rest_framework_csv import renderers as csvrend
+from rest_framework_csv import parsers as csvpars
 
 """
 def upload_file(request):
@@ -63,12 +64,11 @@ def upload_file(request):
 
 
 class CSVUpload(APIView):
-    renderer_classes = [TemplateHTMLRenderer, csvrend.CSVRenderer,]
+    renderer_classes = [TemplateHTMLRenderer,]
     #renderer_classes = [TemplateHTMLRenderer]
     template_name = 'csvupload.html'
     # permission_classes = (permissions.IsAuthenticated,)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly,)
-
     parser_classes = (MultiPartParser, FormParser)
     #serializer_class = JobSerializer
 
@@ -84,21 +84,21 @@ class CSVUpload(APIView):
 
     def post(self, request):
         my_file = request.FILES['csv_file']
+        print("\nRequest DAta KKKKKKKKKKKKKKKK", request.data)
+        #import pdb; pdb.set_trace()
         # csv_source = csvrecords(my_file)
         # io_string = io.StringIO(csv_source)
         # my_file = open("/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007_test.csv")
-        # data_set = io.StringIO(my_file.read().decode('UTF-8'))
+        #data_set = io.StringIO(my_file.read().decode('UTF-8'))
         data_set = io.TextIOWrapper(my_file)
         print("\nDATA SET >>>>>>>", data_set)
         # csv_source = csvrecords(my_file)
         # print("\nCSV SOURCE >>>>>>>",next(csv_source))
-        # data_set = my_file.read()
-        # io_string = io.StringIO(csv_source)
+        #io_string = io.StringIO(data_set)
         # next(io_string)
         count = 0
+
         rdr = csv.DictReader(data_set)
-        print("\nRequest DAta KKKKKKKKKKKKKKKK",request.data)
-        #rdr = csvrecords(data_set)
        # print("XXXXXXXXXXXXXXXXXXXX", next(rdr))
         for item in rdr:
             print("\n", count, item)
@@ -107,21 +107,8 @@ class CSVUpload(APIView):
             #print(serializer.data)
             serializer.save(owner=self.request.user)
             # #serializer.create(validated_data=item)
-            #
             count += 1
         print("Count column:", count)
-
-        # job = get_object_or_404(Job, pk=pk)
-        # serializer = JobSerializer(job, data=request.data)
-        # if not serializer.is_valid():
-        #     return Response({'serializer': serializer, 'job': job})
-        # serializer.save()
-        # return redirect('jobslist')
-
-        csv_source = csvrecords(my_file)  # .read().decode("UTF-8"))
-        #  print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(my_file))
-        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(csv_source))
-        # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", type(record))
 
         return render(request, self.template_name)
 
