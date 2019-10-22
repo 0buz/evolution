@@ -12,21 +12,17 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 
-import csv, io
+
+import io
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import permission_required
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from jobmarket.models import Job
 from jobmarket.serializers import JobSerializer, UserSerializer
 from jobmarket.permissions import IsOwnerOrReadOnly
 from evolution.utils import csvrecords
 import logging
-
-from django.http import HttpResponseRedirect
-from jobmarket.forms import UploadFileForm
-from rest_framework_csv import renderers as csvrend
-from rest_framework_csv import parsers as csvpars
 
 """
 def upload_file(request):
@@ -81,7 +77,7 @@ class CSVUpload(APIView):
         #import pdb; pdb.set_trace()
         data_set = io.TextIOWrapper(source_file)
         count = 0
-        reader = csvrecords(data_set)
+        reader = csvrecords(data_set)   # yield csv row by row to mitigate potential issues with very large files
         #rdr = csv.DictReader(data_set)
         logging.getLogger("info_logger").info(f"{source_file} uploading...")
         for item in reader:
@@ -94,8 +90,11 @@ class CSVUpload(APIView):
 
 
 class HTMLJobList(APIView):
+    model = Job
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'jobslist.html'
+    context_object_name = 'jobs'
+    pagination_by = 10
 
     def get(self, request):
         queryset = Job.objects.all()
@@ -154,3 +153,20 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+
+
+def index(request):
+    user_list = User.objects.all()
+    page = request.GET.get('page', 1)
+
+    paginator = Paginator(user_list, 10)
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+
+    return render(request, 'core/user_list.html', { 'users': users })

@@ -13,7 +13,6 @@ import logging
 
 
 rawfile = "/home/adrian/all/evolution/evolution/data/raw/jiraraw20191014.txt"
-utils.remove_white_space(rawfile)
 
 with open(rawfile) as f:
     html = f.read()

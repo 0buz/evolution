@@ -11,6 +11,7 @@ import time
 import csv
 
 
+
 def fileoutput(flocation, fname, ftype):
     """Returns the fullpath for the file to be saved. e.g. flocation+fname+current date+.ftype  e.g. ../foldername/filename20190830.csv"""
     curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
@@ -75,6 +76,7 @@ class WaitForAttrValueChange(object):
 
 
 def csvrecords(file):
+    """Function to yield one row at a time. This will be used to when uploading csv data via REST API."""
     for item in csv.DictReader(file):
         yield item
 
