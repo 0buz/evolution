@@ -17,48 +17,12 @@ import io
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 from jobmarket.models import Job
 from jobmarket.serializers import JobSerializer, UserSerializer
 from jobmarket.permissions import IsOwnerOrReadOnly
 from evolution.utils import csvrecords
 import logging
-
-"""
-def upload_file(request):
-    template = "csvupload.html"
-    prompt = {
-        'order': 'Order should be Title, Type, Location, Duration, Start Date, Rate, Recruiter, Post Date'
-    }
-    if request.method == "GET":
-        return render(request, "csvupload.html", prompt) #render(request, template, prompt)
-
-    csv_file = request.FILES['csv_file']
-
-    if not csv_file.name.endswith('.csv'):
-        messages.error(request, "This is not a csv file.")
-
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        # if form.is_valid():
-        #     # handle_uploaded_file(request.FILES['file'])
-        #     return HttpResponseRedirect('/success/url/')
-
-        for chunk in csv_file.chunks():
-            data=chunk.decode('UTF-8')
-            csvdata=csv.DictReader(data)
-            for c in csvdata:
-                print(c)
-            print("\n",csvdata)
-            print(type(csvdata))
-            #Job.objects.create()
-
-
-    else:
-        form = UploadFileForm()
-    return render(request, 'csvupload.html', {'form': form})
-"""
-
 
 
 class CSVUpload(APIView):
@@ -88,35 +52,6 @@ class CSVUpload(APIView):
         logging.getLogger("info_logger").info(f"{count} records uploaded.")
         return render(request, self.template_name)
 
-
-class HTMLJobList(APIView):
-    model = Job
-    renderer_classes = [TemplateHTMLRenderer]
-    template_name = 'jobslist.html'
-    context_object_name = 'jobs'
-    pagination_by = 10
-
-    def get(self, request):
-        queryset = Job.objects.all()
-        return Response({'jobs': queryset})
-
-
-class HTMLJobDetail(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
-    template_name = 'jobsdetail.html'
-
-    def get(self, request, pk):
-        job = get_object_or_404(Job, pk=pk)
-        serializer = JobSerializer(job, context={'request': request})
-        return Response({'serializer': serializer, 'job': job})
-
-    def post(self, request, pk):
-        job = get_object_or_404(Job, pk=pk)
-        serializer = JobSerializer(job, data=request.data)
-        if not serializer.is_valid():
-            return Response({'serializer': serializer, 'job': job})
-        serializer.save()
-        return redirect('jobslist')
 
 
 @api_view(['GET'])
@@ -155,18 +90,33 @@ class UserDetail(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 
 
+class HTMLJobList(APIView):
+    """Whilst Django REST Framework aim is on buidling web APIs, this class is simply an experiment on using HTML templates."""
+    model = Job
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'jobslist.html'
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+
+    def get(self, request):
+        queryset = Job.objects.all()
+        return Response({'jobs': queryset})
 
 
-def index(request):
-    user_list = User.objects.all()
-    page = request.GET.get('page', 1)
+class HTMLJobDetail(APIView):
+    """Whilst Django REST Framework aim is on buidling web APIs, this class is simply an experiment on using HTML templates."""
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'jobsdetail.html'
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
-    paginator = Paginator(user_list, 10)
-    try:
-        users = paginator.page(page)
-    except PageNotAnInteger:
-        users = paginator.page(1)
-    except EmptyPage:
-        users = paginator.page(paginator.num_pages)
+    def get(self, request, pk):
+        job = get_object_or_404(Job, pk=pk)
+        serializer = JobSerializer(job, context={'request': request})
+        return Response({'serializer': serializer, 'job': job})
 
-    return render(request, 'core/user_list.html', { 'users': users })
+    def post(self, request, pk):
+        job = get_object_or_404(Job, pk=pk)
+        serializer = JobSerializer(job, data=request.data)
+        if not serializer.is_valid():
+            return Response({'serializer': serializer, 'job': job})
+        serializer.save()
+        return redirect('jobslist')

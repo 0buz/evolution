@@ -108,3 +108,4 @@ print("You made it!")
 utils.remove_white_space(rawfile)
 
 #driver.close()
+logging.getLogger("info_logger").info("jobs extracted.")

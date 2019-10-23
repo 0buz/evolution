@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from jobmarket.models import Job
 from django.contrib.auth.models import User
-
+from rest_framework.pagination import BasePagination
 
 # JobSerializer class uses the model and outputs the table fields
 class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from serializers.ModelSerializer
@@ -12,8 +12,6 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
     rate = serializers.CharField(allow_blank=True)
     posted_date = serializers.DateTimeField(input_formats=[("%d/%m/%Y %H:%M:%S")])
 
-    # highlight = serializers.HyperlinkedIdentityField(view_name='job-detail', format='html')
-    # jobs_description = serializers.PrimaryKeyRelatedField(source="desc2job", many=False, read_only=True)
     #duration = CharField(max_length=20, validators=[ < UniqueValidator(queryset=CustomerReportRecord.objects.all()) >])
 
     # def validate_duration(self,value):
@@ -49,23 +47,6 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
         instance.save()
         return instance
 
-    # def to_representation(self, instance):
-    #     null_fields = {'location', 'duration', 'start date', 'rate'}
-    #     data = super().to_representation(instance)
-    #     for field in null_fields:
-    #         try:
-    #             if not data[field]:
-    #                 data[field] = ""
-    #         except KeyError as err:
-    #             print(err)
-    #     return data
-
-# class JobDescriptionSerializer(serializers.HyperlinkedModelSerializer):
-#     # id = serializers.IntegerField(read_only=True)
-#     # highlight = serializers.HyperlinkedIdentityField(view_name='jobdescription-detail', format='html')
-#     class Meta:
-#         model = JobDescription
-#         fields = ('url', 'id', 'job', 'description', 'created_date')  # added 'url' fields
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):  # updated from serializers.ModelSerializer
     jobs = serializers.HyperlinkedRelatedField(many=True, view_name='job-detail',
@@ -74,9 +55,3 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # updated from se
     class Meta:
         model = User
         fields = ('url', 'id', 'username', 'jobs')  # added 'url', 'jobs' fields
-
-
-# class CSVUploadSerializer(serializers.ModelSerializer):
-#         class Meta:
-#             model = File
-#             fields = "__all__"

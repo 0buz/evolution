@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'evolution.wsgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50
+    'PAGE_SIZE': 10
 #     'DEFAULT_RENDERER_CLASSES': [
 #         'rest_framework.renderers.JSONRenderer',
 #     ],
@@ -154,7 +154,7 @@ STATIC_URL = '/static/'
 
 
 try:
-    from .logging_settings import *
+    from evolution.logging_settings import *
 except Exception as e:
     # in case of any error, pass silently.
     pass
