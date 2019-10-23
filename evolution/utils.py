@@ -157,7 +157,7 @@ class File:
 
         self._remove_white_space()
 
-        self.logging.getLogger("info_logger").info(f"{count} jobs extracted.")
+        logging.getLogger("info_logger").info(f"{count} jobs extracted.")
 
     def data_preprocess(self):
 
