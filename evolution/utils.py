@@ -34,13 +34,33 @@ class WaitForAttrValueChange(object):
         except SE.StaleElementReferenceException:
             return False
 
+def try_click(elem, str):
+    result = False
+    attempts = 0
+    while attempts < 3:
+        time.sleep(0.1)
+        try:
+            elem.click()
+            result = True
+            break
+        except SE.StaleElementReferenceException as err:
+            print(f"For element {elem} {str}:", err)
+        attempts += 1
+    return result
+
 
 class File:
-    def __init__(self):
+    """Class enabling the collection, preprocessing, and upload of data."""
+    def __init__(self,*args):
         curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
         self.basename = f"raw{''.join(curr_date)}.txt"  # file name
         self.savepath = f"{os.getcwd()}/evolution/data/raw"  # path based on working directory
-        self.file = os.path.join(self.savepath, self.basename)
+
+        # optional arg for user-defined filename
+        if args:
+            self.file = os.path.join(self.savepath, args[0])
+        else:
+            self.file = os.path.join(self.savepath, self.basename)
 
     def __repr__(self):
         return f"{self.file}"
@@ -208,59 +228,28 @@ class File:
 
         logging.getLogger("info_logger").info(f"{file} created.")
 
+    def csvrecords(self):
+        """Function to yield one row at a time. This will be used to when uploading csv data via REST API."""
+        for item in DictReader(str(self)):
+            yield item
 
-test = File()
-with open(str(test), "a") as f:
-    f.write("\naaaaaa")
-
-test.output()
-with open(str(test.output()), "a") as f:
-    f.write("\naaaaaa")
-
-rawfile = File()
-rawfile.data_collect()
-
-logging.getLogger("info_logger").info("test jobs extracted.")
-
-
-def fileoutput(flocation, fname, ftype):
-    """Returns the fullpath for the file to be saved. e.g. flocation+fname+current date+.ftype  e.g. ../foldername/filename20190830.csv"""
-    curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
-    basename = f"{fname}{''.join(curr_date)}.{ftype}"  # file name
-    savepath = f"{os.getcwd()}/evolution/data/{flocation}"  # path based on working directory
-    return os.path.join(savepath, basename)
+# test = File()
+# with open(str(test), "a") as f:
+#     f.write("\naaaaaa")
+#
+# test.output()
+# with open(str(test.output()), "a") as f:
+#     f.write("\naaaaaa")
+#
+# rawfile = File('/home/adrian/all/evolution/evolution/data/raw/raw20191023xxx.txt')
+# rawfile.data_collect()
+# rawfile.data_preprocess()
+#
+# logging.getLogger("info_logger").info("test jobs extracted.")
 
 
-base = fileoutput("raw", "dummy", "txt")
 
 
-def preprocessed_fileoutput(flocation, fname, ftype):
-    """Returns the fullpath for the file to be saved. e.g. flocation+fname+.ftype  e.g. ../foldername/filename.csv"""
-    curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
-    basename = f"{fname}{''.join(curr_date)}.{ftype}"  # file name
-    savepath = f"{os.getcwd()}/evolution/data/{flocation}"  # path based on working directory
-    return os.path.join(savepath, basename)
-
-
-def try_click(elem, str):
-    result = False
-    attempts = 0
-    while attempts < 3:
-        time.sleep(0.1)
-        try:
-            elem.click()
-            result = True
-            break
-        except SE.StaleElementReferenceException as err:
-            print(f"For element {elem} {str}:", err)
-        attempts += 1
-    return result
-
-
-def csvrecords(file):
-    """Function to yield one row at a time. This will be used to when uploading csv data via REST API."""
-    for item in DictReader(file):
-        yield item
 
 #
 # file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007updated.csv"
