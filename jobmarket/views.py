@@ -52,7 +52,7 @@ class CSVUpload(APIView):
         logging.getLogger("info_logger").info(f"{count} records uploaded.")
         return render(request, self.template_name)
 
-
+#  >>>>>>>>>>>> IMPLEMENT ROLLBACK script <<<<<<<<<<<<<<<<<<<<<<<<<
 
 @api_view(['GET'])
 def api_root(request, format=None):  # API root endpoint

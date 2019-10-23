@@ -53,14 +53,16 @@ class File:
     """Class enabling the collection, preprocessing, and upload of data."""
     def __init__(self,*args):
         curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
-        self.basename = f"raw{''.join(curr_date)}.txt"  # file name
-        self.savepath = f"{os.getcwd()}/evolution/data/raw"  # path based on working directory
 
-        # optional arg for user-defined filename
-        if args:
-            self.file = os.path.join(self.savepath, args[0])
+        if not args:         # optional arg for user-defined filename
+            self.basename = f"raw{''.join(curr_date)}.txt"  # generated filename
+            print("Basename default in init", self.basename)
         else:
-            self.file = os.path.join(self.savepath, self.basename)
+            self.basename = args[0] # filename based on optional arg
+            print("Basename with arg in init", self.basename)
+
+        self.savepath = f"{os.getcwd()}/evolution/data/raw"  # path based on working directory
+        self.file = os.path.join(self.savepath, self.basename)
 
     def __repr__(self):
         return f"{self.file}"
@@ -70,7 +72,9 @@ class File:
             # look for 'txt' at the end of the string ($)
             # capture middle group for later use ((.*))
             # replace with 'preprocessed' + captured group (\\1) + 'csv'"""
+        print("Basename in output", self.basename)
         self.outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', self.basename)
+        print("Outputname in output", self.outputname)
         self.savepath = f"{os.getcwd()}/evolution/data/preprocessed"
         return os.path.join(self.savepath, self.outputname)
 
@@ -233,21 +237,24 @@ class File:
         for item in DictReader(str(self)):
             yield item
 
-# test = File()
-# with open(str(test), "a") as f:
-#     f.write("\naaaaaa")
-#
-# test.output()
-# with open(str(test.output()), "a") as f:
-#     f.write("\naaaaaa")
-#
-# rawfile = File('/home/adrian/all/evolution/evolution/data/raw/raw20191023xxx.txt')
-# rawfile.data_collect()
-# rawfile.data_preprocess()
-#
-# logging.getLogger("info_logger").info("test jobs extracted.")
+test = File()
+with open(str(test), "a") as f:
+    f.write("\naaaaaa")
+
+aaa=test.output()
 
 
+rawfile = File('raw20191023yyyy.txt')
+xxx=rawfile.output()
+rawfile.data_collect()
+rawfile.data_preprocess()
+with open(str(xxx), "a") as f:
+    f.write("\naaaaaa")
+logging.getLogger("info_logger").info("test jobs extracted.")
+
+curr_date = filter(lambda x: x != "-", str(date.today()))
+basename = f"raw{''.join(curr_date)}xxx.txt"
+outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', basename)
 
 
 
@@ -267,3 +274,8 @@ class File:
 #     count+=1
 
 # print("Rows read:",count)
+
+def csvrecords(file):
+    """Function to yield one row at a time. This will be used to when uploading csv data via REST API."""
+    for item in DictReader(file):
+        yield item
