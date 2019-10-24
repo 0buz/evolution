@@ -12,11 +12,12 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 
-
 import io
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.db.models import functions as op
+
 
 from jobmarket.models import Job
 from jobmarket.serializers import JobSerializer, UserSerializer
@@ -32,27 +33,39 @@ class CSVUpload(APIView):
     parser_classes = (MultiPartParser, FormParser)
     #serializer_class = JobSerializer
 
+
     def get(self, request):
         queryset = Job.objects.all()
         return Response({'jobs': queryset})
 
     def post(self, request):
+        latest_id = Job.objects.latest('id').id   # get latest table id before upload starts
         source_file = request.FILES['csv_file']
         #import pdb; pdb.set_trace()
         data_set = io.TextIOWrapper(source_file)
+
         count = 0
         reader = csvrecords(data_set)   # yield csv row by row to mitigate potential issues with very large files
         #rdr = csv.DictReader(data_set)
         logging.getLogger("info_logger").info(f"{source_file} uploading...")
         for item in reader:
             serializer = JobSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save(owner=self.request.user)
+
+            try:
+                serializer.is_valid()
+                serializer.save(owner=self.request.user)
+            except Exception as err:
+                current_latest_id=Job.objects.latest('id').id
+                logging.getLogger("error_logger").error(f"{err}. Occurred at record {serializer}, after id {current_latest_id}.")
+                items=Job.objects.filter(id__in=[id for id in range(latest_id+1,current_latest_id+1)])
+                for item in items:
+                    item.delete()
+                    #logging.getLogger("error_logger").error(f"{item} record deleted.")
+                logging.getLogger("error_logger").error(f"Upload rolled back! {len(items)} records deleted.")
+                break
             count += 1
         logging.getLogger("info_logger").info(f"{count} records uploaded.")
         return render(request, self.template_name)
-
-#  >>>>>>>>>>>> IMPLEMENT ROLLBACK script <<<<<<<<<<<<<<<<<<<<<<<<<
 
 @api_view(['GET'])
 def api_root(request, format=None):  # API root endpoint

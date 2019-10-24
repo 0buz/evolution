@@ -12,7 +12,7 @@ import logging
 
 
 
-rawfile = "/home/adrian/all/evolution/evolution/data/raw/jiraraw20191014.txt"
+rawfile = "/home/adrian/all/evolution/evolution/data/raw/raw20191023.txt"
 
 with open(rawfile) as f:
     html = f.read()
@@ -47,7 +47,7 @@ rows = list(zip(*jobs))
 #     print("\n",item)
 
 
-file = utils.fileoutput('preprocessed','preprocessed','csv')
+file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191023.csv"
 
 with open(file, "w") as f:
     header=['title','description','type','location','duration','start_date','rate','recruiter','posted_date']

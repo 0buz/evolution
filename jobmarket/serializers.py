@@ -1,7 +1,10 @@
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from rest_framework import serializers
 from jobmarket.models import Job
 from django.contrib.auth.models import User
-from rest_framework.pagination import BasePagination
+from dateutil import parser
 
 # JobSerializer class uses the model and outputs the table fields
 class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from serializers.ModelSerializer
@@ -10,20 +13,16 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
     duration = serializers.CharField(allow_blank=True)
     start_date = serializers.CharField(allow_blank=True)
     rate = serializers.CharField(allow_blank=True)
-    posted_date = serializers.DateTimeField(input_formats=[("%d/%m/%Y %H:%M:%S")])
+    posted_date = serializers.DateTimeField(input_formats=['iso-8601'])
 
-    #duration = CharField(max_length=20, validators=[ < UniqueValidator(queryset=CustomerReportRecord.objects.all()) >])
+    def to_internal_value(self, value):   # pre-process data before serializer validation
+        value['posted_date'] = parser.parse(value['posted_date'])    # use dateutil parser to accept other datatime formats
+        return super().to_internal_value(value)
+
 
     # def validate_duration(self,value):
     #     if not value:
     #         raise serializers.ValidationError("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa.")
-
-    # def to_internal_value(self, data):
-    #     if data.get('duration') == '':
-    #         print("THESE ARE THE DURATION VALUES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ", data.get('duration'))
-    #         data.pop('duration')
-    #
-    #     return super(JobSerializer, self).to_internal_value(data)
 
     class Meta:
         model = Job
