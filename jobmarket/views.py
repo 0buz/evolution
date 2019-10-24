@@ -1,5 +1,4 @@
 import os
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
 
 from rest_framework import generics, permissions
