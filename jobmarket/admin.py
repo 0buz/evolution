@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Job
+from jobmarket.models import Job
 
 # this is to control readonly fields on creation
 # class JobAdmin(admin.ModelAdmin):

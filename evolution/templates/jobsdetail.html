@@ -6,8 +6,10 @@
 
 <form action="{% url 'job-detail' pk=job.pk %}" method="POST">
     {% csrf_token %}
+    <fieldset>
     {% render_form serializer %}
     <input type="submit" value="Save">
+    </fieldset>
 </form>
 
 </body></html>

@@ -1,21 +1,34 @@
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+
 from rest_framework import serializers
 from jobmarket.models import Job
 from django.contrib.auth.models import User
-
+from dateutil import parser
 
 # JobSerializer class uses the model and outputs the table fields
 class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from serializers.ModelSerializer
     owner = serializers.ReadOnlyField(source='owner.username')
+    location = serializers.CharField(allow_blank=True)
+    duration = serializers.CharField(allow_blank=True)
+    start_date = serializers.CharField(allow_blank=True)
+    rate = serializers.CharField(allow_blank=True)
+    posted_date = serializers.DateTimeField(input_formats=['iso-8601'])
 
-    # highlight = serializers.HyperlinkedIdentityField(view_name='job-detail', format='html')
-    # jobs_description = serializers.PrimaryKeyRelatedField(source="desc2job", many=False, read_only=True)
+    def to_internal_value(self, value):   # pre-process data before serializer validation
+        value['posted_date'] = parser.parse(value['posted_date'])    # use dateutil parser to accept other datatime formats
+        return super().to_internal_value(value)
+
+
+    # def validate_duration(self,value):
+    #     if not value:
+    #         raise serializers.ValidationError("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa.")
 
     class Meta:
         model = Job
         fields = (
             'url', 'id', 'title', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter', 'posted_date',
-            'description',
-            'created_date', 'owner')  # added 'url', 'owner' fields
+            'description', 'created_date', 'owner')  # added 'url', 'owner' fields
 
     def create(self, validated_data):
         return Job.objects.create(**validated_data)
@@ -25,7 +38,7 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
         instance.type = validated_data.get('type', instance.type)
         instance.location = validated_data.get('location', instance.location)
         instance.duration = validated_data.get('duration', instance.duration)
-        instance.start_date = validated_data.get('start_date', instance.start_date)
+        instance.start_date = validated_data.get('start date', instance.start_date)
         instance.rate = validated_data.get('rate', instance.rate)
         instance.recruiter = validated_data.get('recruiter', instance.recruiter)
         instance.posted_date = validated_data.get('posted_date', instance.posted_date)
@@ -34,13 +47,6 @@ class JobSerializer(serializers.HyperlinkedModelSerializer):  # updated from ser
         return instance
 
 
-# class JobDescriptionSerializer(serializers.HyperlinkedModelSerializer):
-#     # id = serializers.IntegerField(read_only=True)
-#     # highlight = serializers.HyperlinkedIdentityField(view_name='jobdescription-detail', format='html')
-#     class Meta:
-#         model = JobDescription
-#         fields = ('url', 'id', 'job', 'description', 'created_date')  # added 'url' fields
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):  # updated from serializers.ModelSerializer
     jobs = serializers.HyperlinkedRelatedField(many=True, view_name='job-detail',
                                                read_only=True)  # this is "related_name" defined in models!!!
@@ -48,9 +54,3 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # updated from se
     class Meta:
         model = User
         fields = ('url', 'id', 'username', 'jobs')  # added 'url', 'jobs' fields
-
-
-# class CSVUploadSerializer(serializers.ModelSerializer):
-#         class Meta:
-#             model = File
-#             fields = "__all__"
