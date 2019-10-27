@@ -10,12 +10,12 @@ from datetime import datetime
 
 class Job(models.Model):
     title = models.CharField(max_length=100, default='')
-    type = models.CharField(max_length=20, default='')
+    type = models.CharField(max_length=100, default='')
     location = models.CharField(max_length=100, default='')
     duration = models.CharField(max_length=100, default='')
     start_date = models.CharField(max_length=100, default='')
     rate = models.CharField(max_length=100, default='')
-    recruiter = models.CharField(max_length=50, default='')
+    recruiter = models.CharField(max_length=100, default='')
     posted_date = models.DateTimeField()
     description = models.TextField(default='')
     created_date = models.DateTimeField(auto_now_add=True)

@@ -1,9 +1,13 @@
 import os
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
 # import sys
 # sys.path.append('/home/adrian/all/evolution/')
 os.getcwd()
 # os.chdir("~/all/evolution/evolution")
+import re
+import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.common.by import By
@@ -11,13 +15,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common import exceptions as SE
-import time
 from datetime import date
 from bs4 import BeautifulSoup
 from csv import writer, DictReader
-import re
-import logging
-
 
 
 class WaitForAttrValueChange(object):
@@ -31,6 +31,7 @@ class WaitForAttrValueChange(object):
             return attr_value.startswith(self.val)
         except SE.StaleElementReferenceException:
             return False
+
 
 def try_click(elem, str):
     result = False
@@ -49,22 +50,20 @@ def try_click(elem, str):
 
 class File:
     """Class enabling the collection, preprocessing, and upload of data."""
-    def __init__(self,*args):
+
+    def __init__(self, *args):
         curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
 
-        if not args:         # optional arg for user-defined filename
+        if not args:  # optional arg for user-defined filename
             self.basename = f"raw{''.join(curr_date)}.txt"  # generated filename
-            print("Basename default in init", self.basename)
         else:
-            self.basename = args[0] # filename based on optional arg
-            print("Basename with arg in init", self.basename)
+            self.basename = args[0]  # filename based on optional arg
 
         self.savepath = f"{os.getcwd()}/evolution/data/raw"  # path based on working directory
         self.file = os.path.join(self.savepath, self.basename)
 
     def __repr__(self):
         return f"{self.file}"
-
 
     def _remove_white_space(self):
         """Remove whitespace combination (\n followed by one or more \t) and replace with empty string in file."""
@@ -114,12 +113,10 @@ class File:
             driver.find_element_by_id('ddcl-selInd-i14').click()
 
         # Keyword
-        #driver.find_element_by_id('txtKey').send_keys("jira")
+        # driver.find_element_by_id('txtKey').send_keys("jira")
 
         # Search
         driver.find_element_by_css_selector('.searchbcontain').click()
-
-
 
         try:
             WebDriverWait(driver, 20).until(
@@ -150,7 +147,7 @@ class File:
                         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
                         ActionChains(driver).move_to_element(job).click(job).perform()
                         # try_click(job,"job")
-                        #time.sleep(0.2)
+                        # time.sleep(0.2)
                     except SE.TimeoutException as err:
                         logging.getLogger("error_logger").error(
                             f"Timeout on job no. {count} >>> {job.text[:30]} >>> try click action.")
@@ -215,7 +212,7 @@ class File:
                                                                                   html_id_key == 'rate') else item.get_text()
                       for item in items]
 
-            #print(html_id_value, len(column), column)  # to be logged
+            # print(html_id_value, len(column), column)  # to be logged
             jobs.append(column)  # append the separate lists to the main job list
 
         rows = list(zip(*jobs))
@@ -236,14 +233,28 @@ class File:
         logging.getLogger("info_logger").info(f"{file} created.")
 
 
-
-
-if __name__=="__main__":
+if __name__ == "__main__":
     test = File()
     test.data_collect()
     test.data_to_csv()
+
+
+"""Get all raw files and preprocess in one go"""
+# rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
+# preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
 #
+# preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
+
+# get all raw files that do not have a corresponding csv
+# raw_files = [raw_file for raw_file in os.listdir(rawdir) if
+#              raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files))]
 #
+# for raw_file in raw_files:
+#     work_file = File(raw_file)
+#     work_file._remove_white_space()
+#     work_file.data_to_csv()
+#     logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
+
 # rawfile = File('raw20191023.txt')
 # xxx=rawfile.output()
 # rawfile.data_collect()
@@ -257,7 +268,6 @@ if __name__=="__main__":
 # outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', basename)
 
 
-
 #
 # file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007updated.csv"
 # y = open(file,"r")
@@ -265,5 +275,3 @@ if __name__=="__main__":
 # print(next(x))
 # print(next(x))
 # print(next(x))
-
-

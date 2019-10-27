@@ -10,12 +10,12 @@ from rest_framework.reverse import reverse
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.renderers import JSONRenderer
 
 import io
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.db.models import functions as op
 
 
 from jobmarket.models import Job
@@ -34,8 +34,8 @@ class CSVUpload(APIView):
 
 
     def get(self, request):
-        queryset = Job.objects.all()
-        return Response({'jobs': queryset})
+
+        return render(request, self.template_name)
 
     def post(self, request):
         latest_id = Job.objects.latest('id').id   # get latest table id before upload starts
@@ -46,25 +46,32 @@ class CSVUpload(APIView):
         count = 0
         reader = csvrecords(data_set)   # yield csv row by row to mitigate potential issues with very large files
         #rdr = csv.DictReader(data_set)
-        logging.getLogger("info_logger").info(f"{source_file} uploading...")
+        logging.getLogger("info_logger").info(f"Uploading {source_file}...")
+        success = True
         for item in reader:
             serializer = JobSerializer(data=item)
-
             try:
                 serializer.is_valid()
                 serializer.save(owner=self.request.user)
             except Exception as err:
-                current_latest_id=Job.objects.latest('id').id
-                logging.getLogger("error_logger").error(f"{err}. Occurred at record {serializer}, after id {current_latest_id}.")
-                items=Job.objects.filter(id__in=[id for id in range(latest_id+1,current_latest_id+1)])
+                #if Exception, then rollback upload
+                success = False
+                current_latest_id=Job.objects.latest('id').id   # get what is now the latest ID
+                logging.getLogger("error_logger").error(f"{err}. Occurred at record {serializer}.")
+                items=Job.objects.filter(id__in=[id for id in range(latest_id+1,current_latest_id+1)])   # get all the successfully uploaded records and delete them
                 for item in items:
                     item.delete()
                     #logging.getLogger("error_logger").error(f"{item} record deleted.")
                 logging.getLogger("error_logger").error(f"Upload rolled back! {len(items)} records deleted.")
                 break
             count += 1
-        logging.getLogger("info_logger").info(f"{count} records uploaded.")
-        return render(request, self.template_name)
+        if success:
+            messages.success(request, f"Upload completed successfully for file \"{source_file}\" - {count} records uploaded.")
+            logging.getLogger("info_logger").info(f"Upload completed successfully - {count} records uploaded.")
+        else:
+            messages.error(request, f"Upload failed for file {source_file}! No new records added.")
+        #return render(request, self.template_name, )
+        return HttpResponseRedirect(self.request.path_info)   #path_info stores current url i.e. refresh the page; this is to avoid resubmitting the same file for upload on manual refresh
 
 @api_view(['GET'])
 def api_root(request, format=None):  # API root endpoint
@@ -73,7 +80,6 @@ def api_root(request, format=None):  # API root endpoint
         'Jobs': reverse('job-list', request=request, format=format),
         'HTML Jobs': reverse('jobslist', request=request, format=format),
         'Upload': reverse('csvupload', request=request, format=format),
-        # 'Upload Form': reverse('csvuploadform', request=request, format=format),
     })
 
 
@@ -81,6 +87,7 @@ class JobList(generics.ListCreateAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+   # renderer_classes = [JSONRenderer]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

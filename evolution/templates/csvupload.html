@@ -8,6 +8,9 @@
     </head>
     <body style="margin-top: 30px;margin-left: 30px;">
         <h1>Jobs Upload</h1>
+
+
+
         <form class="form-vertical" action="{% url 'csvupload' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="form-group">
@@ -22,6 +25,13 @@
                         <button type="submit" class="btn btn-default">Upload</button>
                 </div>
             </div>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <l {% if message.tags %} class="{{ message.tags }}"{% endif %}><strong>{{ message }}</strong></l>
+        {% endfor %}
+    </ul>
+    {% endif %}
         </form>
 
         <p></p>

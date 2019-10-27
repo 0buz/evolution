@@ -19,6 +19,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '&a^yrbza4&j@wm+v^mfx*f6ynwq$_8!#y@z*o58#8u*$bt*1+s'
 
@@ -78,10 +85,10 @@ WSGI_APPLICATION = 'evolution.wsgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
-#     'DEFAULT_RENDERER_CLASSES': [
-#         'rest_framework.renderers.JSONRenderer',
-#     ],
+    'PAGE_SIZE': 100,
+    # 'DEFAULT_RENDERER_CLASSES': [
+    #     'rest_framework.renderers.JSONRenderer',
+    # ],
 #     'DEFAULT_PARSER_CLASSES': [
 #         'rest_framework.parsers.JSONParser',
 #     ],
