@@ -65,7 +65,7 @@ class File:
     def __repr__(self):
         return f"{self.file}"
 
-    def _remove_white_space(self):
+    def remove_white_space(self):
         """Remove whitespace combination (\n followed by one or more \t) and replace with empty string in file."""
         with open(str(self), 'r+') as f:
             data = f.read()
@@ -178,7 +178,6 @@ class File:
                     # WebDriverWait(driver, 20).until(lambda driver: jid == loadedID)      # ensure the right job details loaded by checking the job ids
                 jids_old = jids_new
 
-        self._remove_white_space()
         logging.getLogger("info_logger").info(f"{count} jobs extracted.")
 
     def data_to_csv(self):
@@ -233,27 +232,38 @@ class File:
         logging.getLogger("info_logger").info(f"{file} created.")
 
 
+def get_raw_files():
+    """Get all raw files in raw directory; filter out the ones that have already been preprocessed."""
+    rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
+    preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
+
+    preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
+
+    # get all raw files that do not have a corresponding csv: if file starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
+    raw_files = filter(
+        lambda raw_file: raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files)),
+        os.listdir(rawdir))
+    return list(raw_files)
+
+
 if __name__ == "__main__":
     test = File()
     test.data_collect()
+    test.remove_white_space()
     test.data_to_csv()
 
+#========== optional ====================
 
-"""Get all raw files and preprocess in one go"""
-# rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
-# preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
-#
-# preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
-
-# get all raw files that do not have a corresponding csv
-# raw_files = [raw_file for raw_file in os.listdir(rawdir) if
-#              raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files))]
-#
+# raw_files = get_raw_files()
 # for raw_file in raw_files:
 #     work_file = File(raw_file)
-#     work_file._remove_white_space()
+#     work_file.remove_white_space()
 #     work_file.data_to_csv()
 #     logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
+
+#=========================================
+
+
 
 # rawfile = File('raw20191023.txt')
 # xxx=rawfile.output()
