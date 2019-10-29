@@ -1,5 +1,4 @@
 import os
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
 # import sys
 # sys.path.append('/home/adrian/all/evolution/')
