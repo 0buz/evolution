@@ -172,7 +172,7 @@ class File:
                         WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
 
                     innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')
-                    f.write("Added job " + str(count) + innerHTML)
+                    f.write("Adding job " + str(count) + innerHTML + "Added job")
                     count += 1
                     # ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
                     # WebDriverWait(driver, 20).until(lambda driver: jid == loadedID)      # ensure the right job details loaded by checking the job ids
@@ -180,6 +180,17 @@ class File:
 
         logging.getLogger("info_logger").info(f"{count} jobs extracted.")
         driver.close()
+
+    def data_validate(self):
+        with open(str(self)) as f:
+            data = f.read()
+
+        blocks = re.findall("[\s\S]*?Added job", data)
+
+        for block in blocks:
+            >>>> check block contains one of each
+
+
 
     def data_to_csv(self):
         """Extracts the relevant data from the raw file and saves the extracted data in csv format.
@@ -206,31 +217,32 @@ class File:
 
         for html_id_key, html_id_value in html_ids.items():
             items = soup.find_all(id=f"{html_id_value}")
-
-            # list comprehension on job columns with preprocessing in specific cases
-            column = [
-                re.sub(html_id_key.title(), "", item.get_text())
-                if (html_id_key == 'location') or (html_id_key == 'duration') or (html_id_key == 'start date') or (html_id_key == 'rate')
-                else ''.join(re.sub("\\/", "", item.get_text()).split()) if html_id_key == 'type'   # <<< remove any "/" and strip spaces
-                else item.get_text()
-                for item in items
-            ]
-            print(html_id_value, len(column))  # to be logged
-            jobs.append(column)  # append the separate lists to the main job list
-
-        rows = list(zip(*jobs))
-
-        file = self._output()
-
-        with open(file, "w") as f:
-            header = ['title', 'description', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter',
-                      'posted_date']
-            csv_writer = writer(f)
-            csv_writer.writerow(header)
-            for row in rows:
-                csv_writer.writerow(row)
-
-        logging.getLogger("info_logger").info(f"{file} created.")
+            print(len(items))
+        #
+        #     # list comprehension on job columns with preprocessing in specific cases
+        #     column = [
+        #         re.sub(html_id_key.title(), "", item.get_text())
+        #         if (html_id_key == 'location') or (html_id_key == 'duration') or (html_id_key == 'start date') or (html_id_key == 'rate')
+        #         else ''.join(re.sub("\\/", "", item.get_text()).split()) if html_id_key == 'type'   # <<< remove any "/" and strip spaces
+        #         else item.get_text()
+        #         for item in items
+        #     ]
+        #     print(html_id_value, len(column))  # to be logged
+        #     jobs.append(column)  # append the separate lists to the main job list
+        #
+        # rows = list(zip(*jobs))
+        #
+        # file = self._output()
+        #
+        # with open(file, "w") as f:
+        #     header = ['title', 'description', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter',
+        #               'posted_date']
+        #     csv_writer = writer(f)
+        #     csv_writer.writerow(header)
+        #     for row in rows:
+        #         csv_writer.writerow(row)
+        #
+        # logging.getLogger("info_logger").info(f"{file} created.")
 
 
 def get_raw_files():
@@ -265,10 +277,11 @@ if __name__ == "__main__":
 # =========================================
 
 
-rawfile = File('raw20191029.txt')
+rawfile = File('raw20191031test.txt')
 
-rawfile.data_collect()
+#rawfile.data_collect()
 rawfile.data_to_csv()
+
 # with open(str(xxx), "a") as f:
 #     f.write("\naaaaaa")
 # logging.getLogger("info_logger").info("test jobs extracted.")
