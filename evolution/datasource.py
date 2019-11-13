@@ -65,7 +65,7 @@ class File:
     def __repr__(self):
         return f"{self.file}"
 
-    def _remove_white_space(self):
+    def remove_white_space(self):
         """Remove whitespace combination (\n followed by one or more \t) and replace with empty string in file."""
         with open(str(self), 'r+') as f:
             data = f.read()
@@ -145,9 +145,9 @@ class File:
 
                     try:
                         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
-                        ActionChains(driver).move_to_element(job).click(job).perform()
+                        ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
                         # try_click(job,"job")
-                        # time.sleep(0.2)
+                        time.sleep(0.2)
                     except SE.TimeoutException as err:
                         logging.getLogger("error_logger").error(
                             f"Timeout on job no. {count} >>> {job.text[:30]} >>> try click action.")
@@ -164,22 +164,34 @@ class File:
                         # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
                         # driver.execute_script("arguments[0].scrollIntoView(true);", driver.find_element_by_id(loadedID))
                         temp = driver.find_element_by_id(loadedID)
-                        ActionChains(driver).move_to_element(temp).click(temp).perform()
+                        ActionChains(driver).move_to_element(temp).click(temp.find_element_by_class_name('jobResultsTitle')).perform()
                         time.sleep(0.5)
-                        ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
+                        ActionChains(driver).send_keys_to_element(temp, Keys.ARROW_UP)
+                        ActionChains(driver).send_keys_to_element(temp, Keys.ARROW_DOWN)
                         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
                         ActionChains(driver).move_to_element(job).click(job).perform()
                         WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
 
                     innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')
-                    f.write("Added job " + str(count) + innerHTML)
+                    f.write("Adding job " + str(count) + innerHTML + "Added job")
                     count += 1
                     # ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
                     # WebDriverWait(driver, 20).until(lambda driver: jid == loadedID)      # ensure the right job details loaded by checking the job ids
                 jids_old = jids_new
 
-        self._remove_white_space()
         logging.getLogger("info_logger").info(f"{count} jobs extracted.")
+        driver.close()
+    #
+    # def data_validate(self):
+    #     with open(str(self)) as f:
+    #         data = f.read()
+    #
+    #     blocks = re.findall("[\s\S]*?Added job", data)
+    #
+    #     for block in blocks:
+    #         >>>> check block contains one of each
+
+
 
     def data_to_csv(self):
         """Extracts the relevant data from the raw file and saves the extracted data in csv format.
@@ -206,19 +218,19 @@ class File:
 
         for html_id_key, html_id_value in html_ids.items():
             items = soup.find_all(id=f"{html_id_value}")
-            # list comprehension on job columns; special handling for Location, Duration, Start Date and Rate to remove div text; preferred Python route over html xpath to do this
-            column = [re.sub(html_id_key.title(), '', item.get_text()) if (html_id_key == 'location') or (
-                    html_id_key == 'duration') or (html_id_key == 'start date') or (
-                                                                                  html_id_key == 'rate') else item.get_text()
-                      for item in items]
-
-            # print(html_id_value, len(column), column)  # to be logged
+            #print(len(items))
+            # list comprehension on job columns with preprocessing in specific cases
+            column = [
+                re.sub(html_id_key.title(), "", item.get_text())
+                if (html_id_key == 'location') or (html_id_key == 'duration') or (html_id_key == 'start date') or (html_id_key == 'rate')
+                else ''.join(re.sub("\\/", "", item.get_text()).split()) if html_id_key == 'type'   # <<< remove any "/" and strip spaces
+                else item.get_text()
+                for item in items
+            ]
+            print(html_id_value, len(column))  # to be logged
             jobs.append(column)  # append the separate lists to the main job list
 
         rows = list(zip(*jobs))
-
-        # for item in rows:
-        #     print("\n",item)
 
         file = self._output()
 
@@ -233,32 +245,43 @@ class File:
         logging.getLogger("info_logger").info(f"{file} created.")
 
 
+def get_raw_files():
+    """Get all raw files in raw directory; filter out the ones that have already been preprocessed."""
+    rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
+    preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
+
+    preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
+
+    # get all raw files that do not have a corresponding csv: if file starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
+    raw_files = filter(
+        lambda raw_file: raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files)),
+        os.listdir(rawdir))
+    return list(raw_files)
+
+
 if __name__ == "__main__":
     test = File()
     test.data_collect()
+    test.remove_white_space()
     test.data_to_csv()
 
+# ========== optional ====================
 
-"""Get all raw files and preprocess in one go"""
-# rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
-# preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
-#
-# preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
-
-# get all raw files that do not have a corresponding csv
-# raw_files = [raw_file for raw_file in os.listdir(rawdir) if
-#              raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files))]
-#
+# raw_files = get_raw_files()
 # for raw_file in raw_files:
 #     work_file = File(raw_file)
-#     work_file._remove_white_space()
+#     work_file.remove_white_space()
 #     work_file.data_to_csv()
 #     logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
 
-# rawfile = File('raw20191023.txt')
-# xxx=rawfile.output()
-# rawfile.data_collect()
-# rawfile.data_preprocess()
+# =========================================
+
+#
+# rawfile = File('raw20191031test.txt')
+#
+# #rawfile.data_collect()
+# rawfile.data_to_csv()
+
 # with open(str(xxx), "a") as f:
 #     f.write("\naaaaaa")
 # logging.getLogger("info_logger").info("test jobs extracted.")
@@ -269,9 +292,26 @@ if __name__ == "__main__":
 
 
 #
-# file = "/home/adrian/all/evolution/evolution/data/preprocessed/preprocessed20191007updated.csv"
 # y = open(file,"r")
 # x=csvrecords(y)
 # print(next(x))
 # print(next(x))
 # print(next(x))
+#
+# with open(f"{os.getcwd()}/evolution/data/raw/raw20191029.txt", 'r') as f:
+#     data=f.read()
+#
+#
+# print(os.getcwd())
+# text = "Added job 6\n \"md_rate\" class=\"jd_value\">£60k+</span></div><div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Employment Agency</label><span id=\"md_recruiter\" class=</div></div></div></div></div> Added job 1 \"md_rate\" class=\"jd_value\">£60k+</span></div><div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Employment Agency</label><span i class=</div></div></div></div></div>"
+#
+# data_edit=re.sub("\"","",data)
+#
+# data_new=re.sub("\s","", data_edit)
+#
+#
+# recruit1 = re.findall("Added job.*\s*.*md_recruiter", text)
+# recruit = re.findall(".*Added job.*md_recruiter", data_new)
+#
+# for item in recruit:
+#     print(item)

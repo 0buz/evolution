@@ -1,16 +1,20 @@
 from django.utils import timezone
 from django.db import models
-from pygments.lexers import get_all_lexers
-from pygments.styles import get_all_styles
-from datetime import datetime
+from enum import Enum, IntEnum
 
-# LEXERS = [item for item in get_all_lexers() if item[1]]
-# LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
-# STYLE_CHOICES = sorted([(item, item) for item in get_all_styles()])
+
+
 
 class Job(models.Model):
+    # class TypeEnum(IntEnum):
+    #     Any = 1
+    #     Permanent = 2
+    #     Contract = 3
+    #     ContractPermanent = 4
+    #     PartTimeTemporarySeasonal = 5
+
     title = models.CharField(max_length=100, default='')
-    type = models.CharField(max_length=100, default='')
+    type = models.CharField(max_length=30, default='')
     location = models.CharField(max_length=100, default='')
     duration = models.CharField(max_length=100, default='')
     start_date = models.CharField(max_length=100, default='')
