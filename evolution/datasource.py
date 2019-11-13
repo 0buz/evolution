@@ -145,7 +145,7 @@ class File:
 
                     try:
                         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
-                        ActionChains(driver).move_to_element(job).click(job).perform()
+                        ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
                         # try_click(job,"job")
                         time.sleep(0.2)
                     except SE.TimeoutException as err:
@@ -218,8 +218,7 @@ class File:
 
         for html_id_key, html_id_value in html_ids.items():
             items = soup.find_all(id=f"{html_id_value}")
-            print(len(items))
-
+            #print(len(items))
             # list comprehension on job columns with preprocessing in specific cases
             column = [
                 re.sub(html_id_key.title(), "", item.get_text())
