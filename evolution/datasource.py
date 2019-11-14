@@ -148,7 +148,7 @@ class File:
                         ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
                         # try_click(job,"job")
                         time.sleep(0.2)
-                    except SE.TimeoutException as err:
+                    except SE.MoveTargetOutOfBoundsException as err:
                         logging.getLogger("error_logger").error(
                             f"Timeout on job no. {count} >>> {job.text[:30]} >>> try click action.")
                         logging.getLogger("error_logger").error(err)
