@@ -143,17 +143,18 @@ class File:
                     WebDriverWait(driver, 20).until(EC.invisibility_of_element((By.ID, 'EmailAlertPrompt')))
                     # driver.execute_script("arguments[0].scrollIntoView(true);", job)
 
-                    try:
-                        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
-                        ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
-                        # try_click(job,"job")
-                        time.sleep(0.2)
-                    except SE.MoveTargetOutOfBoundsException as err:
-                        logging.getLogger("error_logger").error(
-                            f"Timeout on job no. {count} >>> {job.text[:30]} >>> try click action.")
-                        logging.getLogger("error_logger").error(err)
+                    # try:
+                    #     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
+                    #     ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
+                    #     # try_click(job,"job")
+                    #
+                    # except SE.MoveTargetOutOfBoundsException as err:
+                    #     logging.getLogger("error_logger").error(
+                    #         f"Timeout on job no. {count} >>> {job.text[:30]} >>> try click action.")
+                    #     logging.getLogger("error_logger").error(err)
 
                     try:
+                        time.sleep(0.2)
                         ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
                         WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
                         loadedID = driver.find_element_by_id('jidval').get_property('value')
