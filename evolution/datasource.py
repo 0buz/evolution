@@ -159,21 +159,17 @@ class File:
                         WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
                         loadedID = driver.find_element_by_id('jidval').get_property('value')
 
-                    except SE.TimeoutException as err:
+                    except (SE.TimeoutException, SE.MoveTargetOutOfBoundsException) as err:
                         logging.getLogger("error_logger").error(
                             f"TimeoutException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
                         logging.getLogger("error_logger").error(err)
                         # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
                         # driver.execute_script("arguments[0].scrollIntoView(true);", driver.find_element_by_id(loadedID))
 
-                        # temp = driver.find_element_by_id(loadedID)
-                        # ActionChains(driver).send_keys_to_element(temp, Keys.ARROW_UP)
-                        # ActionChains(driver).send_keys_to_element(temp, Keys.ARROW_DOWN)
-                        #ActionChains(driver).move_to_element(temp).click(temp.find_element_by_class_name('jobResultsTitle')).perform()
                         prev_jid = jids_diff[jids_diff.index(jid) - 1]
                         prev_job = driver.find_element_by_id(prev_jid)
                         ActionChains(driver).move_to_element(prev_job).click(
-                            prev_job.find_element_by_class_name('jobResultsTitle')).perform()
+                            prev_job.find_element_by_class_name('jobResultsTitle')).perform()   # <<<do this in a for loop?
                         print(f"Clicked on prev_job {prev_jid}.")
                         time.sleep(0.5)
                         ActionChains(driver).move_to_element(job).click(
