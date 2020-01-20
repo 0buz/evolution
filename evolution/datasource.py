@@ -65,16 +65,6 @@ class File:
     def __repr__(self):
         return f"{self.file}"
 
-    def remove_white_space(self):
-        """Remove whitespace combination (\n followed by one or more \t) and replace with empty string in file."""
-        with open(str(self), 'r+') as f:
-            data = f.read()
-            data = re.sub(r'\n\t+', '', data)
-            f.seek(0)  # place cursor at the beginning
-            f.write(data)
-            f.truncate()  # remove and extra text left from the pre-edited version
-            # log confirmation of completion
-
     def _output(self):
         """  Returns preprocessed file output location + updated filename
             # look for 'raw' at the start of the string (^)
@@ -168,18 +158,20 @@ class File:
 
                         prev_jid = jids_diff[jids_diff.index(jid) - 1]
                         prev_job = driver.find_element_by_id(prev_jid)
+
                         ActionChains(driver).move_to_element(prev_job).click(
                             prev_job.find_element_by_class_name('jobResultsTitle')).perform()   # <<<do this in a for loop?
                         print(f"Clicked on prev_job {prev_jid}.")
-                        time.sleep(0.5)
+                        time.sleep(0.1)
                         ActionChains(driver).move_to_element(job).click(
                             job.find_element_by_class_name('jobResultsTitle')).perform()
+
                         # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
                         # ActionChains(driver).move_to_element(job).click(job).perform()
                         WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
 
                     innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')
-                    f.write("\nAdding job " + str(count) + innerHTML + "Added job")
+                    f.write("\n\nAdding job " + str(count) + innerHTML + "Added job")
                     count += 1
                     # ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
                     # WebDriverWait(driver, 20).until(lambda driver: jid == loadedID)      # ensure the right job details loaded by checking the job ids
@@ -187,15 +179,54 @@ class File:
 
         logging.getLogger("info_logger").info(f"{count} jobs extracted.")
         driver.close()
-    #
-    # def data_validate(self):
-    #     with open(str(self)) as f:
-    #         data = f.read()
-    #
-    #     blocks = re.findall("[\s\S]*?Added job", data)
-    #
-    #     for block in blocks:
-    #         >>>> check block contains one of each
+
+    def remove_white_space(self):
+        """Remove whitespace combination (\n followed by one or more \t) and replace with empty string in file."""
+        with open(str(self), 'r+') as f:
+            data = f.read()
+            data = re.sub(r'\n\t+', '', data)
+            f.seek(0)  # place cursor at the beginning
+            f.write(data)
+            f.truncate()  # remove and extra text left from the pre-edited version
+            # log confirmation of completion
+
+    def data_validate(self):
+        """Validates data integrity by ensuring each """
+        html_ids = {
+            'title': 'td_jobpositionlink',
+            'description': 'md_skills',
+            'type': 'td_job_type',
+            'location': 'location',
+            'duration': 'duration',
+            'start date': 'startdate',
+            'rate': 'rate',
+            'recruiter': 'md_recruiter',
+            'posted date': 'md_posted_date'
+        }
+
+        append_string="</div><div id=\"recruitername\"><span id=\"md_recruiter\" class=\"jd_value\"><a><span><span>Unknown</span></span></a><a></a></span></div> Added job"
+
+        with open(str(self),"r+") as f:
+            data = f.read()
+
+            blocks = re.findall("[\s\S]*?Added job", data)
+
+            for block in blocks:
+                for html_id_value in html_ids.values():
+                    found = re.findall(html_id_value, block)
+                    if not found:
+                       # print(block)
+                        print("block=", len(block))
+                        block_updated=block[:-len(append_string)] + append_string
+                       # print("block_updated>>>>>>>>>>", block_updated)
+                        #data = f.read()
+                        data = re.sub(block, block_updated, data)
+                        f.seek(data.find(block))  # place cursor at the beginning
+                        f.write(block_updated)
+                     #   f.truncate()  # remove and extra text left from the pre-edited version
+            # log confirmation of completion
+
+
 
 
 
@@ -270,6 +301,9 @@ if __name__ == "__main__":
     test.data_collect()
     test.remove_white_space()
     test.data_to_csv()
+
+validation=File('validate_raw20191209.txt')
+validation.data_validate()
 
 # ========== optional ====================
 
