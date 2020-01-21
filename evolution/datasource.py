@@ -204,30 +204,24 @@ class File:
             'posted date': 'md_posted_date'
         }
 
-        append_string="</div><div id=\"recruitername\"><span id=\"md_recruiter\" class=\"jd_value\"><a><span><span>Unknown</span></span></a><a></a></span></div> Added job"
-
-        with open(str(self),"r+") as f:
+        with open(str(self),"r") as f:
             data = f.read()
 
-            blocks = re.findall("[\s\S]*?Added job", data)
+        blocks = re.findall("[\s\S]*?Added job", data)
 
+        with open(str(self), "w") as f:
+            f.seek(0)
             for block in blocks:
                 for html_id_value in html_ids.values():
+                    append_string = f"</div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a></span></div> Added job"
                     found = re.findall(html_id_value, block)
                     if not found:
                        # print(block)
                         print("block=", len(block))
-                        block_updated=block[:-len(append_string)] + append_string
-                       # print("block_updated>>>>>>>>>>", block_updated)
-                        #data = f.read()
-                        data = re.sub(block, block_updated, data)
-                        f.seek(data.find(block))  # place cursor at the beginning
-                        f.write(block_updated)
-                     #   f.truncate()  # remove and extra text left from the pre-edited version
+                        block=block[:-len(append_string)] + append_string  # overwrite the end of the block with append_string
+                        print("block_updated>>>>>>>>>>", block)
+                f.write("\n"+block)
             # log confirmation of completion
-
-
-
 
 
     def data_to_csv(self):
@@ -252,6 +246,7 @@ class File:
         }
 
         jobs = []
+        column_count=[]
 
         for html_id_key, html_id_value in html_ids.items():
             items = soup.find_all(id=f"{html_id_value}")
@@ -266,9 +261,12 @@ class File:
             ]
             print(html_id_value, len(column))  # to be logged
             jobs.append(column)  # append the separate lists to the main job list
+            column_count.append(len(column)) # append to list of column items count
+
+        if column_count.count(column_count[0]) != len(column_count):
+            self.data_validate()
 
         rows = list(zip(*jobs))
-
         file = self._output()
 
         with open(file, "w") as f:
@@ -304,6 +302,7 @@ if __name__ == "__main__":
 
 validation=File('validate_raw20191209.txt')
 validation.data_validate()
+validation.data_to_csv()
 
 # ========== optional ====================
 
