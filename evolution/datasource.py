@@ -213,7 +213,7 @@ class File:
             f.seek(0)
             for block in blocks:
                 for html_id_value in html_ids.values():
-                    append_string = f"</div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a></span></div> Added job"
+                    append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a></span></div> Added job"
                     found = re.findall(html_id_value, block)
                     if not found:
                        # print(block)
@@ -246,7 +246,6 @@ class File:
         }
 
         jobs = []
-        column_count=[]
 
         for html_id_key, html_id_value in html_ids.items():
             items = soup.find_all(id=f"{html_id_value}")
@@ -261,10 +260,6 @@ class File:
             ]
             print(html_id_value, len(column))  # to be logged
             jobs.append(column)  # append the separate lists to the main job list
-            column_count.append(len(column)) # append to list of column items count
-
-        if column_count.count(column_count[0]) != len(column_count):
-            self.data_validate()
 
         rows = list(zip(*jobs))
         file = self._output()
@@ -298,11 +293,12 @@ if __name__ == "__main__":
     test = File()
     test.data_collect()
     test.remove_white_space()
+    test.data_validate()
     test.data_to_csv()
 
-validation=File('validate_raw20191209.txt')
-validation.data_validate()
-validation.data_to_csv()
+# validation=File('validate_raw20191209.txt')
+# validation.data_validate()
+# validation.data_to_csv()
 
 # ========== optional ====================
 
