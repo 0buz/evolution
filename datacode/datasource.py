@@ -1,10 +1,10 @@
 import os
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
-# import sys
-# sys.path.append('/home/adrian/all/evolution/')
-os.getcwd()
-# os.chdir("~/all/evolution/evolution")
+#
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+# # import sys
+# # sys.path.append('/home/adrian/all/evolution/')
+# os.getcwd()
+# # os.chdir("~/all/evolution/evolution")
 import re
 import time
 import logging
@@ -222,6 +222,7 @@ class File:
                         print("block_updated>>>>>>>>>>", block)
                 f.write("\n"+block)
             # log confirmation of completion
+        return f
 
 
     def data_to_csv(self):
@@ -231,7 +232,7 @@ class File:
         with open(str(self)) as f:
             html = f.read()
 
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'lxml')
 
         html_ids = {
             'title': 'td_jobpositionlink',
@@ -296,9 +297,9 @@ if __name__ == "__main__":
     test.data_validate()
     test.data_to_csv()
 
-# validation=File('validate_raw20191209.txt')
-# validation.data_validate()
-# validation.data_to_csv()
+validation=File('validate_raw20191209.txt')
+validation.data_validate()
+validation.data_to_csv()
 
 # ========== optional ====================
 

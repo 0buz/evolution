@@ -1,10 +1,10 @@
 import psycopg2
 import csv
 from datetime import datetime
-from evolution import datasource
+import datacode.datasource as datasource
 import os
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+#
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
 # import sys
 # sys.path.append('/home/adrian/all/evolution/')
 print(os.getcwd())
@@ -21,7 +21,6 @@ cur = conn.cursor()
 
 
 if __name__ == "__main__":
-
     unprocessed_files=datasource.get_raw_files()
     for file in unprocessed_files[:2]:
         with open(file, "r") as f:
