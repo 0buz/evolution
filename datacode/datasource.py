@@ -20,7 +20,7 @@ from bs4 import BeautifulSoup
 from csv import writer, DictReader
 
 
-class WaitForAttrValueChange(object):
+class WaitForAttrValueChange:
     def __init__(self, locator, val_):
         self.locator = locator
         self.val = val_
@@ -213,16 +213,19 @@ class File:
             f.seek(0)
             for block in blocks:
                 for html_id_value in html_ids.values():
-                    append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a></span></div> Added job"
+                    append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a><a></a></span></div>"
+                    #append_string = f"<div id=\"recruitername\"><span id=\"{html_id_value}\" class=\"jd_value\"><a ><span>Unknown</span></a></span></div> Added job"
+                    #append_string = f"\n<div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Recruiter</label><span id=\"{html_id_value}\" class=\"jd_value\"><a href=\"\" target=\"_self\" title=\"View more information about\"><span><span>Unknown</span></span></a><a></a></span></div> Added job"
+
                     found = re.findall(html_id_value, block)
                     if not found:
                        # print(block)
                         print("block=", len(block))
-                        block=block[:-len(append_string)] + append_string  # overwrite the end of the block with append_string
+                        block=re.sub("<div class=\"dragger_container\" style=\"display: block;\">",append_string,block)
+                        #block=block[:-(len(append_string)+41)] + append_string  # overwrite the end of the block with append_string
                         print("block_updated>>>>>>>>>>", block)
-                f.write("\n"+block)
+                f.write(block)
             # log confirmation of completion
-        return f
 
 
     def data_to_csv(self):
