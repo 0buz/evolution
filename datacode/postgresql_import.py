@@ -21,7 +21,15 @@ cur = conn.cursor()
 #     print(item)
 
 
+def format_date(date):
 
+    if datetime.strptime(date,)
+
+
+     return date.strftime('%Y-%m-%d %H:%M:%S')
+
+    posted_date = datetime.strptime(row[-1], '%d/%m/%Y %H:%M:%S')
+    created_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
     preprocdir = os.path.join(os.getcwd() + "/datacode/data/preprocessed")
