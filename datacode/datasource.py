@@ -1,10 +1,10 @@
 import os
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
-# import sys
-# sys.path.append('/home/adrian/all/evolution/')
-os.getcwd()
-# os.chdir("~/all/evolution/evolution")
+#
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
+# # import sys
+# # sys.path.append('/home/adrian/all/evolution/')
+# os.getcwd()
+# # os.chdir("~/all/evolution/evolution")
 import re
 import time
 import logging
@@ -20,7 +20,7 @@ from bs4 import BeautifulSoup
 from csv import writer, DictReader
 
 
-class WaitForAttrValueChange(object):
+class WaitForAttrValueChange:
     def __init__(self, locator, val_):
         self.locator = locator
         self.val = val_
@@ -48,7 +48,7 @@ def try_click(elem, str):
     return result
 
 
-class File:
+class DataFile:
     """Class enabling the collection, preprocessing, and upload of data."""
 
     def __init__(self, *args):
@@ -59,21 +59,21 @@ class File:
         else:
             self.basename = args[0]  # filename based on optional arg
 
-        self.savepath = f"{os.getcwd()}/evolution/data/raw"  # path based on working directory
+        self.savepath = f"{os.getcwd()}/datacode/data/raw"  # path based on working directory
         self.file = os.path.join(self.savepath, self.basename)
 
     def __repr__(self):
         return f"{self.file}"
 
-    def _output(self):
+    def _output(self,action):
         """  Returns preprocessed file output location + updated filename
             # look for 'raw' at the start of the string (^)
             # look for 'txt' at the end of the string ($)
             # capture middle group for later use ((.*))
             # replace with 'preprocessed' + captured group (\\1) + 'csv'"""
 
-        self.outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', self.basename)
-        self.savepath = f"{os.getcwd()}/evolution/data/preprocessed"
+        self.outputname = re.sub('^raw(.*)txt$', action+'\\1csv', self.basename)
+        self.savepath = f"{os.getcwd()}/datacode/data/preprocessed"
         return os.path.join(self.savepath, self.outputname)
 
     def data_collect(self):
@@ -213,25 +213,31 @@ class File:
             f.seek(0)
             for block in blocks:
                 for html_id_value in html_ids.values():
-                    append_string = f"</div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a></span></div> Added job"
+                    append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a><a></a></span></div> Added job"
+                    #append_string = f"<div id=\"recruitername\"><span id=\"{html_id_value}\" class=\"jd_value\"><a ><span>Unknown</span></a></span></div> Added job"
+                    #append_string = f"\n<div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Recruiter</label><span id=\"{html_id_value}\" class=\"jd_value\"><a href=\"\" target=\"_self\" title=\"View more information about\"><span><span>Unknown</span></span></a><a></a></span></div> Added job"
+
                     found = re.findall(html_id_value, block)
                     if not found:
                        # print(block)
                         print("block=", len(block))
-                        block=block[:-len(append_string)] + append_string  # overwrite the end of the block with append_string
+                        block=re.sub("Added job",append_string,block)
+                        #block=block[:-(len(append_string)+41)] + append_string  # overwrite the end of the block with append_string
                         print("block_updated>>>>>>>>>>", block)
-                f.write("\n"+block)
+                f.write(block)
             # log confirmation of completion
-
 
     def data_to_csv(self):
         """Extracts the relevant data from the raw file and saves the extracted data in csv format.
         These will be further (pre)processed and/or uploaded to database via the REST API."""
 
+        start = time.process_time()
         with open(str(self)) as f:
             html = f.read()
+        print("Read raw file:", time.process_time() - start)
 
-        soup = BeautifulSoup(html, 'html.parser')
+        start = time.process_time()
+        soup = BeautifulSoup(html, 'lxml')
 
         html_ids = {
             'title': 'td_jobpositionlink',
@@ -244,9 +250,10 @@ class File:
             'recruiter': 'md_recruiter',
             'posted date': 'md_posted_date'
         }
+        print("Build soup object:",time.process_time() - start)
 
+        start = time.process_time()
         jobs = []
-        column_count=[]
 
         for html_id_key, html_id_value in html_ids.items():
             items = soup.find_all(id=f"{html_id_value}")
@@ -260,16 +267,23 @@ class File:
                 for item in items
             ]
             print(html_id_value, len(column))  # to be logged
+
             jobs.append(column)  # append the separate lists to the main job list
-            column_count.append(len(column)) # append to list of column items count
+            #print(f"Col count in column:{len(jobs[0])}")
 
-        if column_count.count(column_count[0]) != len(column_count):
-            self.data_validate()
+        it=iter(jobs)
+        if not all(len(col) == len(next(it)) for col in it):    #ensure all columns has the same length before zipping
+            #raise ValueError(f"Columns don't have the same length in {self.file}")
+            print(f"Columns don't have the same length in {self.file}")
 
+        print("Jobs creation:",time.process_time() - start)
+
+        start = time.process_time()
         rows = list(zip(*jobs))
-        file = self._output()
+        print("Zipping:",time.process_time() - start)
+        outfile = self._output('preprocessed')
 
-        with open(file, "w") as f:
+        with open(outfile, "w") as f:
             header = ['title', 'description', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter',
                       'posted_date']
             csv_writer = writer(f)
@@ -277,17 +291,21 @@ class File:
             for row in rows:
                 csv_writer.writerow(row)
 
-        logging.getLogger("info_logger").info(f"{file} created.")
+        logging.getLogger("info_logger").info(f"{outfile} created.")
+
+        return outfile
 
 
 def get_raw_files():
     """Get all raw files in raw directory; filter out the ones that have already been preprocessed."""
-    rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
-    preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
+    rawdir = os.path.join(os.getcwd() + "/datacode/data/raw")
+    preprocdir = os.path.join(os.getcwd() + "/datacode/data/preprocessed")
 
-    preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
+    preproc_files = next(os.walk(preprocdir))[2]  #get only filename from walk tuple; returns list
 
-    # get all raw files that do not have a corresponding csv: if file starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
+    print(preproc_files)
+
+    # get all raw files that do not have a corresponding csv: if file name starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
     raw_files = filter(
         lambda raw_file: raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files)),
         os.listdir(rawdir))
@@ -295,62 +313,13 @@ def get_raw_files():
 
 
 if __name__ == "__main__":
-    test = File()
+    test = DataFile()
     test.data_collect()
     test.remove_white_space()
+    test.data_validate()
     test.data_to_csv()
 
-validation=File('validate_raw20191209.txt')
-validation.data_validate()
-validation.data_to_csv()
-
-# ========== optional ====================
-
-# raw_files = get_raw_files()
-# for raw_file in raw_files:
-#     work_file = File(raw_file)
-#     work_file.remove_white_space()
-#     work_file.data_to_csv()
-#     logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
-
-# =========================================
-
-#
-# rawfile = File('raw20191031test.txt')
-#
-# #rawfile.data_collect()
-# rawfile.data_to_csv()
-
-# with open(str(xxx), "a") as f:
-#     f.write("\naaaaaa")
-# logging.getLogger("info_logger").info("test jobs extracted.")
-#
-# curr_date = filter(lambda x: x != "-", str(date.today()))
-# basename = f"raw{''.join(curr_date)}xxx.txt"
-# outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', basename)
-
-
-#
-# y = open(file,"r")
-# x=csvrecords(y)
-# print(next(x))
-# print(next(x))
-# print(next(x))
-#
-# with open(f"{os.getcwd()}/evolution/data/raw/raw20191029.txt", 'r') as f:
-#     data=f.read()
-#
-#
-# print(os.getcwd())
-# text = "Added job 6\n \"md_rate\" class=\"jd_value\">£60k+</span></div><div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Employment Agency</label><span id=\"md_recruiter\" class=</div></div></div></div></div> Added job 1 \"md_rate\" class=\"jd_value\">£60k+</span></div><div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Employment Agency</label><span i class=</div></div></div></div></div>"
-#
-# data_edit=re.sub("\"","",data)
-#
-# data_new=re.sub("\s","", data_edit)
-#
-#
-# recruit1 = re.findall("Added job.*\s*.*md_recruiter", text)
-# recruit = re.findall(".*Added job.*md_recruiter", data_new)
-#
-# for item in recruit:
-#     print(item)
+    # validation=DataFile('validate_raw20191209.txt')
+    # validation.remove_white_space()
+    # validation.data_validate()
+    # validation.data_to_csv()
