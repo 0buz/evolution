@@ -59,7 +59,7 @@ class File:
         else:
             self.basename = args[0]  # filename based on optional arg
 
-        self.savepath = f"{os.getcwd()}/evolution/data/raw"  # path based on working directory
+        self.savepath = f"{os.getcwd()}/datacode/data/raw"  # path based on working directory
         self.file = os.path.join(self.savepath, self.basename)
 
     def __repr__(self):
@@ -73,7 +73,7 @@ class File:
             # replace with 'preprocessed' + captured group (\\1) + 'csv'"""
 
         self.outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', self.basename)
-        self.savepath = f"{os.getcwd()}/evolution/data/preprocessed"
+        self.savepath = f"{os.getcwd()}/datacode/data/preprocessed"
         return os.path.join(self.savepath, self.outputname)
 
     def data_collect(self):
@@ -213,7 +213,7 @@ class File:
             f.seek(0)
             for block in blocks:
                 for html_id_value in html_ids.values():
-                    append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a><a></a></span></div>"
+                    append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a><a></a></span></div> Added job"
                     #append_string = f"<div id=\"recruitername\"><span id=\"{html_id_value}\" class=\"jd_value\"><a ><span>Unknown</span></a></span></div> Added job"
                     #append_string = f"\n<div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Recruiter</label><span id=\"{html_id_value}\" class=\"jd_value\"><a href=\"\" target=\"_self\" title=\"View more information about\"><span><span>Unknown</span></span></a><a></a></span></div> Added job"
 
@@ -221,20 +221,22 @@ class File:
                     if not found:
                        # print(block)
                         print("block=", len(block))
-                        block=re.sub("<div class=\"dragger_container\" style=\"display: block;\">",append_string,block)
+                        block=re.sub("Added job",append_string,block)
                         #block=block[:-(len(append_string)+41)] + append_string  # overwrite the end of the block with append_string
                         print("block_updated>>>>>>>>>>", block)
                 f.write(block)
             # log confirmation of completion
 
-
     def data_to_csv(self):
         """Extracts the relevant data from the raw file and saves the extracted data in csv format.
         These will be further (pre)processed and/or uploaded to database via the REST API."""
 
+        start = time.process_time()
         with open(str(self)) as f:
             html = f.read()
+        print("Read raw file:", time.process_time() - start)
 
+        start = time.process_time()
         soup = BeautifulSoup(html, 'lxml')
 
         html_ids = {
@@ -248,7 +250,9 @@ class File:
             'recruiter': 'md_recruiter',
             'posted date': 'md_posted_date'
         }
+        print("Build soup object:",time.process_time() - start)
 
+        start = time.process_time()
         jobs = []
 
         for html_id_key, html_id_value in html_ids.items():
@@ -263,12 +267,22 @@ class File:
                 for item in items
             ]
             print(html_id_value, len(column))  # to be logged
+
             jobs.append(column)  # append the separate lists to the main job list
+            #print(f"Col count in column:{len(jobs[0])}")
 
+        it=iter(jobs)
+        if not all(len(col) == len(next(it)) for col in it):    #ensure all columns has the same length before zipping
+            raise ValueError(f"Columns don't have the same length in {self.file}")
+
+        print("Jobs creation:",time.process_time() - start)
+
+        start = time.process_time()
         rows = list(zip(*jobs))
-        file = self._output()
+        print("Zipping:",time.process_time() - start)
+        outfile = self._output()
 
-        with open(file, "w") as f:
+        with open(outfile, "w") as f:
             header = ['title', 'description', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter',
                       'posted_date']
             csv_writer = writer(f)
@@ -276,13 +290,15 @@ class File:
             for row in rows:
                 csv_writer.writerow(row)
 
-        logging.getLogger("info_logger").info(f"{file} created.")
+        logging.getLogger("info_logger").info(f"{outfile} created.")
+
+        return outfile
 
 
 def get_raw_files():
     """Get all raw files in raw directory; filter out the ones that have already been preprocessed."""
-    rawdir = os.path.join(os.getcwd() + "/evolution/data/raw")
-    preprocdir = os.path.join(os.getcwd() + "/evolution/data/preprocessed")
+    rawdir = os.path.join(os.getcwd() + "/datacode/data/raw")
+    preprocdir = os.path.join(os.getcwd() + "/datacode/data/preprocessed")
 
     preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
 
@@ -294,24 +310,25 @@ def get_raw_files():
 
 
 if __name__ == "__main__":
-    test = File()
-    test.data_collect()
-    test.remove_white_space()
-    test.data_validate()
-    test.data_to_csv()
+    # test = File()
+    # test.data_collect()
+    # test.remove_white_space()
+    # test.data_validate()
+    # test.data_to_csv()
 
-validation=File('validate_raw20191209.txt')
-validation.data_validate()
-validation.data_to_csv()
+    validation=File('validate_raw20191209.txt')
+    validation.remove_white_space()
+    validation.data_validate()
+    validation.data_to_csv()
 
 # ========== optional ====================
 
-# raw_files = get_raw_files()
-# for raw_file in raw_files:
-#     work_file = File(raw_file)
-#     work_file.remove_white_space()
-#     work_file.data_to_csv()
-#     logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
+raw_files = get_raw_files()
+for raw_file in raw_files:
+    work_file = File(raw_file)
+    work_file.remove_white_space()
+    work_file.data_to_csv()
+    logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
 
 # =========================================
 

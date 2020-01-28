@@ -23,7 +23,8 @@ cur = conn.cursor()
 if __name__ == "__main__":
     unprocessed_files=datasource.get_raw_files()
     for file in unprocessed_files[:2]:
-        with open(file, "r") as f:
+        workfile=datasource.File(file)
+        with open(workfile, "r") as f:
             next(f)  # skip header
             reader = csv.reader(f)
             for row in reader:
