@@ -48,7 +48,7 @@ def try_click(elem, str):
     return result
 
 
-class File:
+class DataFile:
     """Class enabling the collection, preprocessing, and upload of data."""
 
     def __init__(self, *args):
@@ -65,14 +65,14 @@ class File:
     def __repr__(self):
         return f"{self.file}"
 
-    def _output(self):
+    def _output(self,action):
         """  Returns preprocessed file output location + updated filename
             # look for 'raw' at the start of the string (^)
             # look for 'txt' at the end of the string ($)
             # capture middle group for later use ((.*))
             # replace with 'preprocessed' + captured group (\\1) + 'csv'"""
 
-        self.outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', self.basename)
+        self.outputname = re.sub('^raw(.*)txt$', action+'\\1csv', self.basename)
         self.savepath = f"{os.getcwd()}/datacode/data/preprocessed"
         return os.path.join(self.savepath, self.outputname)
 
@@ -273,14 +273,15 @@ class File:
 
         it=iter(jobs)
         if not all(len(col) == len(next(it)) for col in it):    #ensure all columns has the same length before zipping
-            raise ValueError(f"Columns don't have the same length in {self.file}")
+            #raise ValueError(f"Columns don't have the same length in {self.file}")
+            print(f"Columns don't have the same length in {self.file}")
 
         print("Jobs creation:",time.process_time() - start)
 
         start = time.process_time()
         rows = list(zip(*jobs))
         print("Zipping:",time.process_time() - start)
-        outfile = self._output()
+        outfile = self._output('preprocessed')
 
         with open(outfile, "w") as f:
             header = ['title', 'description', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter',
@@ -300,9 +301,11 @@ def get_raw_files():
     rawdir = os.path.join(os.getcwd() + "/datacode/data/raw")
     preprocdir = os.path.join(os.getcwd() + "/datacode/data/preprocessed")
 
-    preproc_files = [preproc_file for preproc_file in os.listdir(preprocdir)]
+    preproc_files = next(os.walk(preprocdir))[2]  #get only filename from walk tuple; returns list
 
-    # get all raw files that do not have a corresponding csv: if file starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
+    print(preproc_files)
+
+    # get all raw files that do not have a corresponding csv: if file name starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
     raw_files = filter(
         lambda raw_file: raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files)),
         os.listdir(rawdir))
@@ -310,64 +313,13 @@ def get_raw_files():
 
 
 if __name__ == "__main__":
-    # test = File()
-    # test.data_collect()
-    # test.remove_white_space()
-    # test.data_validate()
-    # test.data_to_csv()
+    test = DataFile()
+    test.data_collect()
+    test.remove_white_space()
+    test.data_validate()
+    test.data_to_csv()
 
-    validation=File('validate_raw20191209.txt')
-    validation.remove_white_space()
-    validation.data_validate()
-    validation.data_to_csv()
-
-# ========== optional ====================
-
-raw_files = get_raw_files()
-for raw_file in raw_files:
-    work_file = File(raw_file)
-    work_file.remove_white_space()
-    work_file.data_to_csv()
-    logging.getLogger("info_logger").info(f"{work_file} preprocessed.")
-
-# =========================================
-
-#
-# rawfile = File('raw20191031test.txt')
-#
-# #rawfile.data_collect()
-# rawfile.data_to_csv()
-
-# with open(str(xxx), "a") as f:
-#     f.write("\naaaaaa")
-# logging.getLogger("info_logger").info("test jobs extracted.")
-#
-# curr_date = filter(lambda x: x != "-", str(date.today()))
-# basename = f"raw{''.join(curr_date)}xxx.txt"
-# outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', basename)
-
-
-#
-# y = open(file,"r")
-# x=csvrecords(y)
-# print(next(x))
-# print(next(x))
-# print(next(x))
-#
-# with open(f"{os.getcwd()}/evolution/data/raw/raw20191029.txt", 'r') as f:
-#     data=f.read()
-#
-#
-# print(os.getcwd())
-# text = "Added job 6\n \"md_rate\" class=\"jd_value\">£60k+</span></div><div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Employment Agency</label><span id=\"md_recruiter\" class=</div></div></div></div></div> Added job 1 \"md_rate\" class=\"jd_value\">£60k+</span></div><div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Employment Agency</label><span i class=</div></div></div></div></div>"
-#
-# data_edit=re.sub("\"","",data)
-#
-# data_new=re.sub("\s","", data_edit)
-#
-#
-# recruit1 = re.findall("Added job.*\s*.*md_recruiter", text)
-# recruit = re.findall(".*Added job.*md_recruiter", data_new)
-#
-# for item in recruit:
-#     print(item)
+    # validation=DataFile('validate_raw20191209.txt')
+    # validation.remove_white_space()
+    # validation.data_validate()
+    # validation.data_to_csv()
