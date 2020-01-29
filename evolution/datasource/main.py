@@ -13,7 +13,7 @@ if __name__=="__main__":
 
 #
 #
-# rawfile = File('raw20191023.txt')
+# rawfile = DataFile('raw20191023.txt')
 # xxx=rawfile.output()
 # rawfile.data_collect()
 # rawfile.data_preprocess()
