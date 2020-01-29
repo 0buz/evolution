@@ -55,6 +55,8 @@ def try_click(elem, str):
 class DataFile:
     """Class enabling the collection, preprocessing, and upload of data."""
 
+    file_records=0
+
     def __init__(self, *args):
         curr_date = filter(lambda x: x != "-", str(date.today()))  # filter out dashes; this is not a str yet
 
@@ -69,20 +71,16 @@ class DataFile:
     def __repr__(self):
         return f"{self.file}"
 
-    def _output(self,status):
+    def _output(self):
         """  Returns preprocessed file output location + updated filename
             # look for 'raw' at the start of the string (^)
             # look for 'txt' at the end of the string ($)
             # capture middle group for later use ((.*))
             # replace with 'preprocessed' + captured group (\\1) + 'csv'"""
         self.savepath = f"{settings.BASE_DIR + settings.IMPORTED_DIR}"
-        if status == 'preprocessed':
-            basename=self.basename
-            self.outputname = re.sub('^raw(.*)txt$', status+'\\1csv', basename)
-            return os.path.join(self.savepath, self.outputname)
-        elif status == 'imported':
-            basename = self.basename
-            self.outputname= re.sub('^preprocessed(.*)csv$', 'imported\\1csv', basename)
+        basename=self.basename
+        self.outputname = re.sub('^raw(.*)txt$', 'preprocessed\\1csv', basename)
+        return os.path.join(self.savepath, self.outputname)
 
     def data_collect(self):
         """Extracts the raw data and saves it to file."""
@@ -111,7 +109,7 @@ class DataFile:
             driver.find_element_by_id('ddcl-selInd-i14').click()
 
         # Keyword
-        # driver.find_element_by_id('txtKey').send_keys("jira")
+        driver.find_element_by_id('txtKey').send_keys("jira")
 
         # Search
         driver.find_element_by_css_selector('.searchbcontain').click()
@@ -266,8 +264,11 @@ class DataFile:
 
         start = time.process_time()
         rows = list(zip(*jobs))
+        #DataFile.file_records+=len(rows)
+        self.record_count=len(rows)
         print("Zipping:",time.process_time() - start)
-        outfile = self._output('preprocessed')
+        outfile = self._output()
+        print(f"There are {self.record_count} records in {outfile}.")
 
         with open(outfile, "w") as f:
             header = ['title', 'description', 'type', 'location', 'duration', 'start_date', 'rate', 'recruiter',
@@ -290,23 +291,36 @@ class DataFile:
             next(f)  # skip header
             csv_reader = reader(f)  #csv.reader
             for row in csv_reader:
-                posted_date = parser.parse(row[-1])  # process other date formats
-                # posted_date = datetime.strptime(row[-1], '%d/%m/%Y %H:%M:%S')
-                created_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                # print((row[:-1]+[a.strftime('%Y-%m-%d %H:%M:%S'),created_date,'2']))
-                cur.execute(
-                    "INSERT INTO jobmarket_job(title, description, type, location, duration, start_date, rate, recruiter, posted_date,created_date, owner_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);",
-                    (row[:-1] + [posted_date, created_date, '2']))
+                #try:
+                    posted_date = parser.parse(row[-1])  # process other date formats
+                    # posted_date = datetime.strptime(row[-1], '%d/%m/%Y %H:%M:%S')
+                    created_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    # print((row[:-1]+[a.strftime('%Y-%m-%d %H:%M:%S'),created_date,'2']))
+                    cur.execute(
+                        "INSERT INTO jobmarket_job(title, description, type, location, duration, start_date, rate, recruiter, posted_date,created_date, owner_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);",
+                        (row[:-1] + [posted_date, created_date, '2']))
+
+                # except Exception as err:
+                #     # if Exception, then rollback upload
+                #     success = False
+                #     current_latest_id = Job.objects.latest('id').id  # get what is now the latest ID
+                #     logging.getLogger("error_logger").error(f"{err}. Occurred at record {serializer}.")
+                #     items = Job.objects.filter(id__in=[id for id in range(latest_id + 1,
+                #                                                           current_latest_id + 1)])  # get all the successfully uploaded records and delete them
+                #     for item in items:
+                #         item.delete()
+                #         # logging.getLogger("error_logger").error(f"{item} record deleted.")
+                #     logging.getLogger("error_logger").error(f"Upload rolled back! {len(items)} records deleted.")
+                #     break
+
         print(f"Processed file {work_file}")
-
-        preprocdir = os.path.join(settings.BASE_DIR + settings.IMPORTED_DIR)
-        old_file = os.path.join(preprocdir, work_file)
-        outputname = self._output('imported')
-        new_file = os.path.join(preprocdir, outputname)
-        os.rename(old_file, new_file)
-
         conn.commit()
         conn.close()
+
+        preprocdir = os.path.join(settings.BASE_DIR + settings.IMPORTED_DIR)
+        outputname = re.sub('^preprocessed(.*)csv$', 'imported\\1csv', os.path.basename(work_file))
+        new_file = os.path.join(preprocdir, outputname)
+        os.rename(work_file, new_file)
 
 
 
@@ -321,8 +335,6 @@ def get_files(status):
     procdir = os.path.join(settings.BASE_DIR + settings.IMPORTED_DIR)   #proc dir contains either preporcessed or imported files
 
     proc_files = next(os.walk(procdir))[2]  #get only filename from walk tuple; returns list
-
-    print(proc_files)
 
     # get all files that do not have a corresponding csv: if file name starts with {status} and the date part ([-12:-4]) does not already exist in the preproc file list
     match_files = filter(
