@@ -4,6 +4,7 @@ import re
 import datacode.datasource as datasource
 from datetime import datetime
 from dateutil import parser
+from datacode import settings
 import os
 #
 # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'evolution.settings')
@@ -21,19 +22,11 @@ cur = conn.cursor()
 # for item in res:
 #     print(item)
 
-#
-# def format_date(date):
-#
-#     if datetime.strptime(date,)
-#
-#
-#      return date.strftime('%Y-%m-%d %H:%M:%S')
-#
-#     posted_date = datetime.strptime(row[-1], '%d/%m/%Y %H:%M:%S')
-#     created_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 
 if __name__ == "__main__":
-    preprocdir = os.path.join(os.getcwd() + "/datacode/data/preprocessed")
+    print(settings.BASE_DIR)
+    preprocdir = os.path.join(settings.BASE_DIR+settings.IMPORTED_DIR)
     preproc_files = next(os.walk(preprocdir))[2]      #get only filename from walk tuple; returns list
     unprocessed_files =[file for file in preproc_files if not file.startswith("imported")]
 

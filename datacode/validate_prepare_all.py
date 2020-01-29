@@ -3,7 +3,7 @@ import os
 
 
 if __name__ == "__main__":
-    raw_files = datasource.get_raw_files()
+    raw_files = datasource.get_files('raw')
     print(f"{len(raw_files)} files will be processed.")
     for raw_file in raw_files:
         work_file = datasource.DataFile(raw_file)

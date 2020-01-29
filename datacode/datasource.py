@@ -8,6 +8,7 @@ import os
 import re
 import time
 import logging
+import psycopg2
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.common.by import By
@@ -17,7 +18,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common import exceptions as SE
 from datetime import date
 from bs4 import BeautifulSoup
-from csv import writer, DictReader
+from csv import writer, reader, DictReader
+from datetime import datetime
+from dateutil import parser
+from datacode import settings
 
 
 class WaitForAttrValueChange:
@@ -59,27 +63,31 @@ class DataFile:
         else:
             self.basename = args[0]  # filename based on optional arg
 
-        self.savepath = f"{os.getcwd()}/datacode/data/raw"  # path based on working directory
+        self.savepath = f"{settings.BASE_DIR+settings.RAW_DIR}"  # path based on working directory
         self.file = os.path.join(self.savepath, self.basename)
 
     def __repr__(self):
         return f"{self.file}"
 
-    def _output(self,action):
+    def _output(self,status):
         """  Returns preprocessed file output location + updated filename
             # look for 'raw' at the start of the string (^)
             # look for 'txt' at the end of the string ($)
             # capture middle group for later use ((.*))
             # replace with 'preprocessed' + captured group (\\1) + 'csv'"""
-
-        self.outputname = re.sub('^raw(.*)txt$', action+'\\1csv', self.basename)
-        self.savepath = f"{os.getcwd()}/datacode/data/preprocessed"
-        return os.path.join(self.savepath, self.outputname)
+        self.savepath = f"{settings.BASE_DIR + settings.IMPORTED_DIR}"
+        if status == 'preprocessed':
+            basename=self.basename
+            self.outputname = re.sub('^raw(.*)txt$', status+'\\1csv', basename)
+            return os.path.join(self.savepath, self.outputname)
+        elif status == 'imported':
+            basename = self.basename
+            self.outputname= re.sub('^preprocessed(.*)csv$', 'imported\\1csv', basename)
 
     def data_collect(self):
         """Extracts the raw data and saves it to file."""
 
-        url = 'https://www.jobserve.com'
+        url = settings.URL
 
         driver = webdriver.Chrome()
         driver.get(url)
@@ -191,18 +199,9 @@ class DataFile:
             # log confirmation of completion
 
     def data_validate(self):
-        """Validates data integrity by ensuring each """
-        html_ids = {
-            'title': 'td_jobpositionlink',
-            'description': 'md_skills',
-            'type': 'td_job_type',
-            'location': 'location',
-            'duration': 'duration',
-            'start date': 'startdate',
-            'rate': 'rate',
-            'recruiter': 'md_recruiter',
-            'posted date': 'md_posted_date'
-        }
+        """Validates data integrity by ensuring each data block contains one of each html ids.
+        If html id does not exist, append block with html id in valid html structure."""
+        html_ids = settings.HTML_IDS
 
         with open(str(self),"r") as f:
             data = f.read()
@@ -214,8 +213,6 @@ class DataFile:
             for block in blocks:
                 for html_id_value in html_ids.values():
                     append_string = f"<div><span id=\"{html_id_value}\" class=\"jd_value\"><a><span>Unknown</span></a><a></a></span></div> Added job"
-                    #append_string = f"<div id=\"recruitername\"><span id=\"{html_id_value}\" class=\"jd_value\"><a ><span>Unknown</span></a></span></div> Added job"
-                    #append_string = f"\n<div id=\"recruitername\"><label id=\"lbl_recruiter\" class=\"jd_label\">Recruiter</label><span id=\"{html_id_value}\" class=\"jd_value\"><a href=\"\" target=\"_self\" title=\"View more information about\"><span><span>Unknown</span></span></a><a></a></span></div> Added job"
 
                     found = re.findall(html_id_value, block)
                     if not found:
@@ -238,18 +235,7 @@ class DataFile:
 
         start = time.process_time()
         soup = BeautifulSoup(html, 'lxml')
-
-        html_ids = {
-            'title': 'td_jobpositionlink',
-            'description': 'md_skills',
-            'type': 'td_job_type',
-            'location': 'location',
-            'duration': 'duration',
-            'start date': 'startdate',
-            'rate': 'rate',
-            'recruiter': 'md_recruiter',
-            'posted date': 'md_posted_date'
-        }
+        html_ids = settings.HTML_IDS
         print("Build soup object:",time.process_time() - start)
 
         start = time.process_time()
@@ -295,21 +281,54 @@ class DataFile:
 
         return outfile
 
+    def db_import(self, work_file):
+        conn = psycopg2.connect(settings.DB_CREDENTIALS)
+        cur = conn.cursor()
 
-def get_raw_files():
-    """Get all raw files in raw directory; filter out the ones that have already been preprocessed."""
-    rawdir = os.path.join(os.getcwd() + "/datacode/data/raw")
-    preprocdir = os.path.join(os.getcwd() + "/datacode/data/preprocessed")
+        with open(work_file, "r") as f:
+            print(f"Processing file {work_file}")
+            next(f)  # skip header
+            csv_reader = reader(f)  #csv.reader
+            for row in csv_reader:
+                posted_date = parser.parse(row[-1])  # process other date formats
+                # posted_date = datetime.strptime(row[-1], '%d/%m/%Y %H:%M:%S')
+                created_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                # print((row[:-1]+[a.strftime('%Y-%m-%d %H:%M:%S'),created_date,'2']))
+                cur.execute(
+                    "INSERT INTO jobmarket_job(title, description, type, location, duration, start_date, rate, recruiter, posted_date,created_date, owner_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);",
+                    (row[:-1] + [posted_date, created_date, '2']))
+        print(f"Processed file {work_file}")
 
-    preproc_files = next(os.walk(preprocdir))[2]  #get only filename from walk tuple; returns list
+        preprocdir = os.path.join(settings.BASE_DIR + settings.IMPORTED_DIR)
+        old_file = os.path.join(preprocdir, work_file)
+        outputname = self._output('imported')
+        new_file = os.path.join(preprocdir, outputname)
+        os.rename(old_file, new_file)
 
-    print(preproc_files)
+        conn.commit()
+        conn.close()
 
-    # get all raw files that do not have a corresponding csv: if file name starts with "raw" and the date part ([-12:-4]) does not already exist in the preproc file list
-    raw_files = filter(
-        lambda raw_file: raw_file.startswith("raw") and not re.findall(raw_file[-12:-4], str(preproc_files)),
+
+
+def get_files(status):
+    """Get all files matching the status; filter out the ones that already have that status.
+    Status can be one of the following: raw, preprocessed, imported."""
+
+    if status not in ('raw','preprocessed','imported'):
+        raise ValueError(f"get_files function argument must be one of the following: raw, preprocessed, imported.")
+
+    rawdir = os.path.join(settings.BASE_DIR+settings.RAW_DIR)
+    procdir = os.path.join(settings.BASE_DIR + settings.IMPORTED_DIR)   #proc dir contains either preporcessed or imported files
+
+    proc_files = next(os.walk(procdir))[2]  #get only filename from walk tuple; returns list
+
+    print(proc_files)
+
+    # get all files that do not have a corresponding csv: if file name starts with {status} and the date part ([-12:-4]) does not already exist in the preproc file list
+    match_files = filter(
+        lambda match_file: match_file.startswith(status) and not re.findall(match_file[-12:-4], str(proc_files)),
         os.listdir(rawdir))
-    return list(raw_files)
+    return list(match_files)
 
 
 if __name__ == "__main__":
