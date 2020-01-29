@@ -1,5 +1,8 @@
 # evolution
-REST API and data analysis
+/jobmarket - Django REST API 
+
+/datacode - Data scraping, database import, analysis
+
 
 Tech Stack:
 
