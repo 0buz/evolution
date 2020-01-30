@@ -109,7 +109,7 @@ class DataFile:
             driver.find_element_by_id('ddcl-selInd-i14').click()
 
         # Keyword
-        driver.find_element_by_id('txtKey').send_keys("jira")
+        #driver.find_element_by_id('txtKey').send_keys("jira")
 
         # Search
         driver.find_element_by_css_selector('.searchbcontain').click()
