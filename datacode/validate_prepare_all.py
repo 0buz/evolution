@@ -14,6 +14,8 @@ if __name__ == "__main__":
         work_file.db_import(preprocessed_file)
         print(f"\n{preprocessed_file} done.")
 
+    print(f"Total records uploaded: {total_records}")
+
     # validation=datasource.DataFile('raw20191023.txt')
     # validation.remove_white_space()
     # validation.data_validate()
