@@ -52,3 +52,7 @@ if __name__ == "__main__":
     # conn.close()
 
 
+
+
+
+x=get_files('raw')

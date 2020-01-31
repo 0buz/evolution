@@ -89,7 +89,16 @@ for col in obj_cols.columns:
           df[col] = df[col].astype('category')
 
 print(df.info(memory_usage='deep'))
-
+# =============================================================================================
 
 
 #======= Read csv with optimal column types =====================================
+dtypes = {"ConstituentBeginDate": "float", "ConstituentEndDate": "float"}
+chunk_iter = pd.read_csv("moma.csv", chunksize=250, dtype=dtypes)
+lifespans = []
+for chunk in chunk_iter:
+    diff = chunk['ConstituentEndDate'] - chunk['ConstituentBeginDate']
+    lifespans.append(diff)
+lifespans_dist = pd.concat(lifespans)
+print(lifespans_dist)
+# =============================================================================================
