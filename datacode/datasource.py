@@ -86,8 +86,12 @@ class DataFile:
         """Extracts the raw data and saves it to file."""
 
         url = settings.URL
+        options = webdriver.ChromeOptions()
+        options.add_argument('start-maximized')
+        options.add_argument('disable-infobars')
+        options.add_argument('--disable-notifications')
 
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
 
         driver.find_element_by_id('selAge').click()
