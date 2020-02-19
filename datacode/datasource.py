@@ -86,8 +86,12 @@ class DataFile:
         """Extracts the raw data and saves it to file."""
 
         url = settings.URL
+        options = webdriver.ChromeOptions()
+        options.add_argument('start-maximized')
+        options.add_argument('disable-infobars')
+        options.add_argument('--disable-notifications')
 
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
 
         driver.find_element_by_id('selAge').click()
@@ -134,7 +138,7 @@ class DataFile:
                 job_counter = driver.find_element_by_class_name(
                     'job-counter').text  # needs to be here otherwise the last batch will be ommited
                 whilecount += 1
-                for jid in jids_diff:
+                for i, jid in enumerate(jids_diff):
                     job = driver.find_element_by_id(jid)
                     WebDriverWait(driver, 20).until(EC.invisibility_of_element((By.ID, 'EmailAlertPrompt')))
                     # driver.execute_script("arguments[0].scrollIntoView(true);", job)
@@ -162,7 +166,8 @@ class DataFile:
                         # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
                         # driver.execute_script("arguments[0].scrollIntoView(true);", driver.find_element_by_id(loadedID))
 
-                        prev_jid = jids_diff[jids_diff.index(jid) - 1]
+                        #prev_jid = jids_diff[jids_diff.index(jid) - 1]
+                        prev_jid=jids_diff[i-1]
                         prev_job = driver.find_element_by_id(prev_jid)
 
                         ActionChains(driver).move_to_element(prev_job).click(
