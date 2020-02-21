@@ -1,3 +1,5 @@
+"""Get all unprocessed files, validate-transform then, then import to postgresql db"""
+
 import datacode.datasource as datasource
 import os
 
