@@ -24,7 +24,7 @@ def import_files(unprocessed_files):
     Loops through list of unprocessed files and imports them to database.
     """
 
-    conn = psycopg2.connect("dbname=jobmarket user=pgrole host=localhost password=rpython")
+    conn = psycopg2.connect(settings.DB_CREDENTIALS)
     cur = conn.cursor()
 
     preprocdir = os.path.join(settings.BASE_DIR + settings.IMPORTED_DIR)
