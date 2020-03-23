@@ -90,39 +90,39 @@ class DataFile:
         options.add_argument('start-maximized')
         options.add_argument('disable-infobars')
         options.add_argument('--disable-notifications')
-        options.add_argument('--headless')
+        #options.add_argument('--headless')
 
         driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
 
-        driver.find_element_by_id('selAge').click()
-        select = Select(driver.find_element_by_id('selAge'))
+        driver.find_element_by_id(settings.AGE).click()
+        select = Select(driver.find_element_by_id(settings.AGE))
         select.select_by_index(7)
 
         # Location
-        driver.find_element_by_id('txtLoc').clear()
+        driver.find_element_by_id(settings.LOC).clear()
 
         # Industry
-        driver.find_element_by_class_name('ui-dropdownchecklist-text').click()
-        checked = driver.find_element_by_id('ddcl-selInd-i0').get_property('checked')
+        driver.find_element_by_class_name(settings.IND).click()
+        checked = driver.find_element_by_id(settings.IND_ALL).get_property('checked')
         if checked:
-            driver.find_element_by_id('ddcl-selInd-i0').click()
+            driver.find_element_by_id(settings.IND_ALL).click()
 
         # ITC
-        checked = driver.find_element_by_id('ddcl-selInd-i14').get_property('checked')
+        checked = driver.find_element_by_id(settings.IND_ITC).get_property('checked')
         if not checked:
-            driver.find_element_by_id('ddcl-selInd-i14').click()
+            driver.find_element_by_id(settings.IND_ITC).click()
 
         # Keyword
         #driver.find_element_by_id('txtKey').send_keys("jira")
 
         # Search
-        driver.find_element_by_css_selector('.searchbcontain').click()
+        driver.find_element_by_css_selector(settings.SEARCH).click()
 
         try:
             WebDriverWait(driver, 20).until(
-                lambda driver: driver.find_element_by_class_name('job-counter').text.strip() != '')
-            job_counter = driver.find_element_by_class_name('job-counter').text
+                lambda driver: driver.find_element_by_class_name(settings.JOBCOUNTER).text.strip() != '')
+            job_counter = driver.find_element_by_class_name(settings.JOBCOUNTER).text
             print(job_counter)
         except SE.TimeoutException as err:
             logging.getLogger("error_logger").error(f"Initial job_counter issue. {err}", exc_info=True)
@@ -133,15 +133,15 @@ class DataFile:
 
         with open(str(self), "w") as f:
             while job_counter:
-                jobs = driver.find_elements_by_class_name('jobItem')
+                jobs = driver.find_elements_by_class_name(settings.JOBITEM)
                 jids_new = [job.get_property('id') for job in jobs]
                 jids_diff = [jid for jid in jids_new if jid not in set(jids_old)]  # jids_new minus jids_old
                 job_counter = driver.find_element_by_class_name(
-                    'job-counter').text  # needs to be here otherwise the last batch will be ommited
+                    settings.JOBCOUNTER).text  # needs to be here otherwise the last batch will be omitted
                 whilecount += 1
                 for i, jid in enumerate(jids_diff):
                     job = driver.find_element_by_id(jid)
-                    WebDriverWait(driver, 20).until(EC.invisibility_of_element((By.ID, 'EmailAlertPrompt')))
+                    WebDriverWait(driver, 20).until(EC.invisibility_of_element((By.ID, settings.EMAIL_ALERT)))
                     # driver.execute_script("arguments[0].scrollIntoView(true);", job)
 
                     # try:
@@ -156,9 +156,9 @@ class DataFile:
 
                     try:
                         time.sleep(0.2)
-                        ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name('jobResultsTitle')).perform()
-                        WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
-                        loadedID = driver.find_element_by_id('jidval').get_property('value')
+                        ActionChains(driver).move_to_element(job).click(job.find_element_by_class_name(settings.JOBTITLE)).perform()
+                        WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, settings.JOBID), jid))
+                        loadedID = driver.find_element_by_id(settings.JOBID).get_property('value')
 
                     except (SE.TimeoutException, SE.MoveTargetOutOfBoundsException) as err:
                         logging.getLogger("error_logger").error(
@@ -172,17 +172,17 @@ class DataFile:
                         prev_job = driver.find_element_by_id(prev_jid)
 
                         ActionChains(driver).move_to_element(prev_job).click(
-                            prev_job.find_element_by_class_name('jobResultsTitle')).perform()   # <<<do this in a for loop?
+                            prev_job.find_element_by_class_name(settings.JOBTITLE)).perform()   # <<<do this in a for loop?
                         print(f"Clicked on prev_job {prev_jid}.")
                         time.sleep(0.1)
                         ActionChains(driver).move_to_element(job).click(
-                            job.find_element_by_class_name('jobResultsTitle')).perform()
+                            job.find_element_by_class_name(settings.JOBTITLE)).perform()
 
                         # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
                         # ActionChains(driver).move_to_element(job).click(job).perform()
-                        WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, 'jidval'), jid))
+                        WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, settings.JOBID), jid))
 
-                    innerHTML = driver.find_element_by_id('JobDetailPanel').get_property('innerHTML')
+                    innerHTML = driver.find_element_by_id(settings.JOBDETAILS).get_property('innerHTML')
                     f.write("\n\nAdding job " + str(count) + innerHTML + "Added job")
                     count += 1
                     # ActionChains(driver).send_keys_to_element(job, Keys.ARROW_DOWN)
