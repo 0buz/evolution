@@ -262,7 +262,7 @@ class DataFile:
             #print(f"Col count in column:{len(jobs[0])}")
 
         it=iter(jobs)
-        if not all(len(col) == len(next(it)) for col in it):    #ensure all columns has the same length before zipping
+        if not all(len(col) == len(next(it)) for col in it):    #ensure all columns have the same length before zipping
             #raise ValueError(f"Columns don't have the same length in {self.file}")
             print(f"Columns don't have the same length in {self.file}")
 
