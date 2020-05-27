@@ -1,6 +1,9 @@
 import datacode.datasource as datasource
+import os
 
 if __name__ == "__main__":
+    # os.system("echo Hello from the other side!")
+    # os.system("chromedriver --version")
     work_file = datasource.DataFile()
     work_file.data_collect()
     work_file.remove_white_space()

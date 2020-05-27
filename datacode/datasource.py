@@ -91,6 +91,7 @@ class DataFile:
         options.add_argument('disable-infobars')
         options.add_argument('--disable-notifications')
         #options.add_argument('--headless')
+        options.add_argument("user-agent='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'")
 
         driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
