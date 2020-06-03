@@ -90,7 +90,8 @@ class DataFile:
         options.add_argument('start-maximized')
         options.add_argument('disable-infobars')
         options.add_argument('--disable-notifications')
-        options.add_argument('--headless')
+        #options.add_argument('--headless')
+        options.add_argument("user-agent='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'")
 
         driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
@@ -164,10 +165,7 @@ class DataFile:
                         logging.getLogger("error_logger").error(
                             f"TimeoutException on job no. {count} >>> {job.text[:30]} >>> jid {jid} vs loadedID {loadedID}.")
                         logging.getLogger("error_logger").error(err)
-                        # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, 'ErrorLoadingJobImg')))
-                        # driver.execute_script("arguments[0].scrollIntoView(true);", driver.find_element_by_id(loadedID))
 
-                        #prev_jid = jids_diff[jids_diff.index(jid) - 1]
                         prev_jid=jids_diff[i-1]
                         prev_job = driver.find_element_by_id(prev_jid)
 
@@ -178,8 +176,6 @@ class DataFile:
                         ActionChains(driver).move_to_element(job).click(
                             job.find_element_by_class_name(settings.JOBTITLE)).perform()
 
-                        # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, jid)))
-                        # ActionChains(driver).move_to_element(job).click(job).perform()
                         WebDriverWait(driver, 20).until(WaitForAttrValueChange((By.ID, settings.JOBID), jid))
 
                     innerHTML = driver.find_element_by_id(settings.JOBDETAILS).get_property('innerHTML')
