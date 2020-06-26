@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$USER_HOME$/Python/ModernPython3Bootcamp/Various/.idea/Various.iml" filepath="$USER_HOME$/Python/ModernPython3Bootcamp/Various/.idea/Various.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/evolution.iml" filepath="$PROJECT_DIR$/.idea/evolution.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../illio/.idea/illio.iml" filepath="$PROJECT_DIR$/../illio/.idea/illio.iml" />
     </modules>
   </component>
 </project>

@@ -28,7 +28,7 @@ import logging
 class CSVUpload(APIView):
     renderer_classes = [TemplateHTMLRenderer,]
     template_name = 'csvupload.html'
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
     parser_classes = (MultiPartParser, FormParser)
     #serializer_class = JobSerializer
 
