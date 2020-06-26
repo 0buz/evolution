@@ -22,6 +22,8 @@ from csv import writer, reader, DictReader
 from datetime import datetime
 from dateutil import parser
 from datacode import settings
+from requests import get
+from tqdm import tqdm
 
 
 class WaitForAttrValueChange:
@@ -91,10 +93,14 @@ class DataFile:
         options.add_argument('disable-infobars')
         options.add_argument('--disable-notifications')
         #options.add_argument('--headless')
+        options.add_argument('window-size=1920x1080')
         options.add_argument("user-agent='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0'")
 
         driver = webdriver.Chrome(chrome_options=options)
         driver.get(url)
+
+        ip = get('https://ident.me').text
+        print(f'Public IP address: {ip}')
 
         driver.find_element_by_id(settings.AGE).click()
         select = Select(driver.find_element_by_id(settings.AGE))
@@ -125,12 +131,14 @@ class DataFile:
                 lambda driver: driver.find_element_by_class_name(settings.JOBCOUNTER).text.strip() != '')
             job_counter = driver.find_element_by_class_name(settings.JOBCOUNTER).text
             print(job_counter)
+            total_jobs = int(re.search('(\d+)', job_counter).group()) + 25
         except SE.TimeoutException as err:
             logging.getLogger("error_logger").error(f"Initial job_counter issue. {err}", exc_info=True)
 
         count = 0
         whilecount = 0
         jids_old = []
+
 
         with open(str(self), "w") as f:
             while job_counter:
@@ -187,6 +195,7 @@ class DataFile:
 
         logging.getLogger("info_logger").info(f"{count} jobs extracted.")
         driver.close()
+        print("Data collect done!")
 
     def remove_white_space(self):
         """Remove whitespace combination (\n followed by one or more \t) and replace with empty string in file."""

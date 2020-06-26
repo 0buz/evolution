@@ -9,7 +9,7 @@ if __name__ == "__main__":
     work_file.remove_white_space()
     work_file.data_validate()
     preprocessed_file=work_file.data_to_csv()
-    work_file.db_import(preprocessed_file)
+    #work_file.db_import(preprocessed_file)
     print(f"\n{preprocessed_file} done.")
 
 
